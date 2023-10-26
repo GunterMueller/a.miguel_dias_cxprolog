@@ -1,0 +1,225 @@
+/*
+ *   This file is part of the NanoProlog system
+
+ *   README
+ *   by A.Miguel Dias - 93/11/17
+ *   GLOC - Grupo de Logica Computacional
+ *   Dept. de Informatica, FCT, Universidade Nova de Lisboa.
+ *   Copyright (C) 1993 A.Miguel Dias, GLOC, DI/FCT/UNL
+
+ *   NanoProlog is free software; you can redistribute it and/or modify
+ *   it under the terms of the GNU General Public License as published by
+ *   the Free Software Foundation; either version 1, or (at your option)
+ *   any later version.
+
+ *   NanoProlog is distributed in the hope that it will be useful,
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *   GNU General Public License for more details.
+
+ *   You should have received a copy of the GNU General Public License
+ *   along with NanoProlog; see the file COPYING.  If not, write to
+ *   the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+
+/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
+
+NanoProlog version 0.53
+
+The NanoProlog system implements a WAM based minimal Prolog system. It may
+be useful for the development of simple applications, to make quick
+experiments, or to incorporate in more ambitious software. There are other
+free software Prolog systems available that are *much* more complete than
+NanoProlog (although bulky) such as SB-Prolog.
+
+The main advantage of NanoProlog is that is small, manageable and yet
+reasonably fast.
+
+NanoProlog is a compiler but provides an interpreter-like interface.
+
+NanoProlog has been written in C. NanoProlog has been tested on the
+Macintosh using the THINKC 5.0 compiler and on several other machines
+running Unix using the gcc compiler: Vax, Next, Mips, Alpha, Sparc,
+R6000, HP. It should be compatible with 32 and 64 bit machines with at
+least 3 bits available for tags in the data addresses (see files
+"NanoProlog.h" and "Terms.h").
+
+The supported system predicates are those described in "Introduction
+to Logic Programming" by Clocksin, Springer Verlag).
+
+NanoProlog has several shortcomings: [1] no garbage collection,
+[2] no debugger, [3] few system predicates, [4] the cut predicate (!/0)
+has no effect when used inside some system predicates such as ;/2
+and not/1.
+
+NanoProlog supports threads (Modula-2 like coroutines).
+
+NanoProlog system is experimental software. There is no support for it,
+neither documentation (besides the included "_README" file).
+
+NanoProlog was originally written in 1989, while the author was studying
+implementation techniques for Prolog.
+
+The costumization for the host machine is made in the file "NanoProlog.h".
+In most of the cases it sould be enough to #define a suitable symbol at
+the top of the file. The file "NanoBoot.pl" is required at boot time.
+
+Artur Miguel Dias (amd@di.fct.unl.pt)
+GLOC - Grupo de Logica Computacional
+Dept. de Informatica, FCT, Universidade Nova de Lisboa
+Portugal
+
+/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
+
+Releases:
+
+ 960924: version 0.53
+ 	files changed: System.c
+	changes: harmless bug fixed
+
+ 940225: version 0.52
+ 	files changed: Compiler.c, Index.c, Util.h, Term.h, Term.c, Arith.c,
+ 			NanoProlog.pl, System.c, Predicates.c, Predicates.h
+ 	changes: 64 bit machine compatibility plus some polishing.
+ 	         bug in 'reconsult' fixed.
+ 		 Tested on some more machines: Alpha, Sparc, 88000, R6000, HP
+
+ 931120: version 0.51
+ 	files changed: TermRead.c, TermWrite.c, ThreadedCode.h, ...
+ 	changes: small bugs fixed
+ 		 threaded code added
+
+ 931117: version 0.5
+
+/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
+
+System Predicates
+~~~~~~~~~~~~~~~~~
+(As described in "Introduction to Logic Programming" by Clocksin, Springer Verlag)
+
+CONTROL
+~~~~~~~
++P,+Q
++P;+Q
+!
+call(+G)
++G
+not +G
++P -> +Q ; +R 
++P -> +Q
+true
+fail
+repeat
+
+TERMS
+~~~~~
+var(?X)
+nonvar(?X)
+atom(?X)
+integer(?X)
+real(?X)
+number(?X)
+atomic(?X)
+functor(?Term, ?Name, ?Arity)
+arg(+ArgNum, +Term, -Arg)
+?Pred =.. ?List
+name(?Constant, ?Chars)
+?T1 == ?T2
+?T1 \== ?T2
+?T1 = ?T2
+?T1 \= ?T2
+
+ARITHMETIC
+~~~~~~~~~~
+-X is +Expression
++X =:= +Y
++X =\= +Y
++X < +Y
++X > +Y
++X =< +Y
++X >= +Y
+succ(?N, ?M)		% M = N + 1 & N =>0
+
+PROGRAM DATA BASE
+~~~~~~~~~~~~~~~~~
+asserta(+Clause)
+assertz(+Clause)
+assert(+Clause)			% fast compiler written in C
+clause(+Head, ?Body)
+retract(+Clause)
+retractall(+Head)
+findall(-Var,+Goal,-List)
+noindex(+Name, +Arity)	% The predicate Name/Arity is not to be indexed
+user_predicate(X)		% generates all user predicates (through backtraking)
+system_predicate(X)		% generates all system predicates
+
+INPUT / OUTPUT
+~~~~~~~~~~~~~~
+see(+File)
+tell(+File)
+seeing(-File)
+seen
+telling(-File)
+told
+read(-X)
+read(-X, -Names)
+write(?X)
+writeln(?X)
+writeq(?X)
+print(?X)
+display(?X)
+get0(-N)
+get(-N)
+skip(+N)
+put(+N)
+nl
+tab(+N)
+op(+Precedence, +Type, +Name)
+reset_ops			% reset all the operators to their initial state
+
+USER INTERFACE
+~~~~~~~~~~~~~~
+consult(+File)
+reconsult(+File)
+listing
+listing(+Name)
+listing(+Name/+Arity)
+statistics
+code(+Name, +Arity)	% lists the WAM code for predicate Name/Arity
+code(+Name)			% lists the WAM code for all the predicates named Name
+halt
+restart
+?A :- ?B			% asserts clause ?A :- ?B
+trace				% dumb debugger (only the call port is shown)
+notrace
+
+THREADS (coroutines)
+~~~~~~~~~~~~~~~~~~~~
+% Thread organization: tree. Killing a thread also kill all of its descendents
+
+new_thread(+ThName, +Size, +Goal, +RestartGoal)
+		% Size in KBytes, RestartGoal activated in case Goal aborts due to error
+		% ThName, Goal, RestartGoal all atoms
+transfer_to_thread(+ThName,-Result)
+		% possible results: going, completed, failed, killed, error
+actual_thread(-ThName)
+kill_thread(+ThName)
+
+/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
+
+TESTING:
+
+ To test NanoProlog consult the file 'z'. The output should be something
+like this:
+
+?- [z].
+File zbm consulted 4972 bytes 0.015624 sec.
+File zstr_io.pl consulted 28604 bytes 0.10156 sec.
+File ztokens.pl consulted 34828 bytes 0.1289 sec.
+File zutils consulted 12368 bytes 0.03906 sec.
+1.348e+05 lips for 500 iterations taking 1.8397 secs (1.8514-0.011718)
+1.3339e+05 lips for 500 iterations taking 1.8593 secs (1.871-0.011717)
+a(_1665,[we,45,_2114])
+File z consulted 86068 bytes 4.0544 sec.
+yes
+

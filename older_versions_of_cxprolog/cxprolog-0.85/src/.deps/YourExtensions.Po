@@ -1,0 +1,200 @@
+YourExtensions.o: YourExtensions.c CxProlog.h Util.h \
+  /usr/lib/gcc-lib/i386-redhat-linux/3.2.2/include/limits.h \
+  /usr/lib/gcc-lib/i386-redhat-linux/3.2.2/include/syslimits.h \
+  /usr/include/limits.h /usr/include/features.h /usr/include/sys/cdefs.h \
+  /usr/include/gnu/stubs.h /usr/include/bits/posix1_lim.h \
+  /usr/include/bits/local_lim.h /usr/include/linux/limits.h \
+  /usr/include/bits/posix2_lim.h /usr/include/stdlib.h \
+  /usr/lib/gcc-lib/i386-redhat-linux/3.2.2/include/stddef.h \
+  /usr/include/sys/types.h /usr/include/bits/types.h \
+  /usr/include/bits/wordsize.h /usr/include/bits/typesizes.h \
+  /usr/include/time.h /usr/include/endian.h /usr/include/bits/endian.h \
+  /usr/include/sys/select.h /usr/include/bits/select.h \
+  /usr/include/bits/sigset.h /usr/include/bits/time.h \
+  /usr/include/sys/sysmacros.h /usr/include/bits/pthreadtypes.h \
+  /usr/include/bits/sched.h /usr/include/alloca.h /usr/include/stdio.h \
+  /usr/include/libio.h /usr/include/_G_config.h /usr/include/wchar.h \
+  /usr/include/bits/wchar.h /usr/include/gconv.h \
+  /usr/lib/gcc-lib/i386-redhat-linux/3.2.2/include/stdarg.h \
+  /usr/include/bits/stdio_lim.h /usr/include/bits/sys_errlist.h \
+  /usr/include/bits/stdio.h /usr/include/string.h \
+  /usr/include/bits/string.h /usr/include/bits/string2.h \
+  /usr/include/setjmp.h /usr/include/bits/setjmp.h Extra.h Stream.h \
+  Mesg.h Memory.h Buffer.h Atom.h GCollection.h Term.h Number.h IVar.h \
+  Clock.h Arith.h Boot.h TermChars.h VarDictionary.h Operator.h \
+  TermRead.h TermWrite.h Clause.h Predicate.h Unit.h Unify.h Flags.h \
+  Machine.h Instructions.h Thread.h Disassembler.h Attention.h Debug.h \
+  CodeGen.h Index.h Compiler.h CallProlog.h Queue.h Stack.h Dict.h \
+  Array.h FileSys.h Net.h Process.h CmdLine.h OS.h
+
+CxProlog.h:
+
+Util.h:
+
+/usr/lib/gcc-lib/i386-redhat-linux/3.2.2/include/limits.h:
+
+/usr/lib/gcc-lib/i386-redhat-linux/3.2.2/include/syslimits.h:
+
+/usr/include/limits.h:
+
+/usr/include/features.h:
+
+/usr/include/sys/cdefs.h:
+
+/usr/include/gnu/stubs.h:
+
+/usr/include/bits/posix1_lim.h:
+
+/usr/include/bits/local_lim.h:
+
+/usr/include/linux/limits.h:
+
+/usr/include/bits/posix2_lim.h:
+
+/usr/include/stdlib.h:
+
+/usr/lib/gcc-lib/i386-redhat-linux/3.2.2/include/stddef.h:
+
+/usr/include/sys/types.h:
+
+/usr/include/bits/types.h:
+
+/usr/include/bits/wordsize.h:
+
+/usr/include/bits/typesizes.h:
+
+/usr/include/time.h:
+
+/usr/include/endian.h:
+
+/usr/include/bits/endian.h:
+
+/usr/include/sys/select.h:
+
+/usr/include/bits/select.h:
+
+/usr/include/bits/sigset.h:
+
+/usr/include/bits/time.h:
+
+/usr/include/sys/sysmacros.h:
+
+/usr/include/bits/pthreadtypes.h:
+
+/usr/include/bits/sched.h:
+
+/usr/include/alloca.h:
+
+/usr/include/stdio.h:
+
+/usr/include/libio.h:
+
+/usr/include/_G_config.h:
+
+/usr/include/wchar.h:
+
+/usr/include/bits/wchar.h:
+
+/usr/include/gconv.h:
+
+/usr/lib/gcc-lib/i386-redhat-linux/3.2.2/include/stdarg.h:
+
+/usr/include/bits/stdio_lim.h:
+
+/usr/include/bits/sys_errlist.h:
+
+/usr/include/bits/stdio.h:
+
+/usr/include/string.h:
+
+/usr/include/bits/string.h:
+
+/usr/include/bits/string2.h:
+
+/usr/include/setjmp.h:
+
+/usr/include/bits/setjmp.h:
+
+Extra.h:
+
+Stream.h:
+
+Mesg.h:
+
+Memory.h:
+
+Buffer.h:
+
+Atom.h:
+
+GCollection.h:
+
+Term.h:
+
+Number.h:
+
+IVar.h:
+
+Clock.h:
+
+Arith.h:
+
+Boot.h:
+
+TermChars.h:
+
+VarDictionary.h:
+
+Operator.h:
+
+TermRead.h:
+
+TermWrite.h:
+
+Clause.h:
+
+Predicate.h:
+
+Unit.h:
+
+Unify.h:
+
+Flags.h:
+
+Machine.h:
+
+Instructions.h:
+
+Thread.h:
+
+Disassembler.h:
+
+Attention.h:
+
+Debug.h:
+
+CodeGen.h:
+
+Index.h:
+
+Compiler.h:
+
+CallProlog.h:
+
+Queue.h:
+
+Stack.h:
+
+Dict.h:
+
+Array.h:
+
+FileSys.h:
+
+Net.h:
+
+Process.h:
+
+CmdLine.h:
+
+OS.h:

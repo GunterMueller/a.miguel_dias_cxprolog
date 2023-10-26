@@ -1,0 +1,442 @@
+/*
+ *   This file is part of the CxProlog system
+
+ *   README
+ *   by A.Miguel Dias - 93/11/17
+ *   CITI - Centro de Informatica e Tecnologias da Informacao
+ *   Dept. de Informatica, FCT, Universidade Nova de Lisboa.
+ *   Copyright (C) 1993, ..., 2000 A.Miguel Dias, CITI, DI/FCT/UNL
+
+ *   CxProlog is free software; you can redistribute it and/or modify
+ *   it under the terms of the GNU General Public License as published by
+ *   the Free Software Foundation; either version 1, or (at your option)
+ *   any later version.
+
+ *   CxProlog is distributed in the hope that it will be useful,
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *   GNU General Public License for more details.
+
+ *   You should have received a copy of the GNU General Public License
+ *   along with CxProlog; see the file COPYING.  If not, write to
+ *   the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+
+/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
+
+CxProlog version 0.70
+
+CxProlog is a simple WAM based Prolog system, extended with some features:
+	- threads (Modula-2-like coroutines);
+	- units (Modula-2-like modules)
+	- contexts (cf. [L.Monteiro, A.Porto: "Contextual Logic Programming",
+		in Proc. 6º ICLP, Lisboa, Portugal,MIT Press, 1989])
+
+CxProlog is small and manageable, yet reasonably fast.
+
+CxProlog is a compiler but provides an interpreter-like interface.
+
+CxProlog is written in C. CxProlog has been tested on the Macintosh (using the
+THINKC 5.0 compiler) and on some other machines running Unix (using the gcc
+compiler): i386, R6000, Mips. It should be compatible with any 32 or 64 bit
+machine with at least 3 bits available for tags in the data addresses. No
+costumisation of the source code should be necessary. The CxProlog adjusts
+itself to the machine where it runs.
+
+The core of the supported system predicates are those described in
+"Introduction to Logic Programming" by Clocksin, Springer Verlag).
+
+CxProlog system is experimental software. There is no support for it,
+neither documentation (besides the included "_README" file).
+
+The main contributors with ideas for improving the CxProlog system was:
+António Porto, Rui Marques, Tiago Antão.
+
+Artur Miguel Dias (amd@di.fct.unl.pt)
+CITI - Centro de Informatica e Tecnologias da Informacao
+Dept. de Informatica, FCT, Universidade Nova de Lisboa
+Portugal
+
+/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
+
+Releases:
+
+ 000510: version 0.70
+ 	name change: "NanoProlog" was renamed as "CxProlog".
+ 	new files: too many to list here
+ 	files changed: Most files have changed. Many file names have changed.
+ 					For example, "NanoBoot.pl" was renamed as "CxBoot.pl".
+	changes: * Complete system overhaul.
+			 * Added support to units (modules). Units may have parameters.
+			 * Added support to contexts: "Contextual Logic Programming".
+			 * Added support to the declaration of imperative private local
+			 	variables in the units: see predicates
+			 					set_ivar/2, get_ivar/2 below.
+			 * The sublanguage of the arithmetic expressions was enlarged:
+				see description of predicate is/2 below.
+			 * Error messages are now much improved.
+			 * Handling of Control-C interrupt.
+			 * Improved display of query results (CxBoot.pl).
+				
+			 * New generic method of binding the predicates to their code.
+			 * New simpler technique of dealing with clause chains:
+			  	two parallel chains not used anymore
+			 * New improved ways of dealing with indexes: invalidation of
+			 	the index when a predicate changes, relocation of the index
+				code, etc, etc.
+			 * Bug in predicate clause/2 fixed: now this predicate fails
+			    immediately if applied to a builtin predicate.
+			 * Bugs related to the use of trans-127 characters solved.
+			 * TermRead can now deal with V E R Y  L A R G E terms.
+			 
+ 000324: version 0.57
+ 	new files: TermExtra.c
+ 	files changed: All files have changed
+	changes: * The whole program was made ANSI-conformant.
+			 * Added general support for the addition of new primitive types:
+				* new tag: 'extra'
+				* new instructions: the 'Extra' instruction family
+				* new predicate extra/1
+			 * Added new primitive type 'text' (see descr. below) with
+			  predicates: text/1, gett/1, putt/1, slicet/4, namet/2, concatt/2.
+			 * Removed predicate gets/2.
+			 * '`' changed from _SY to '`' (Now '`' is the delimiter 
+			 	for the "text" literals).
+
+ 990627: version 0.56
+ 	files changed: System.c, TermChars.c, TermOp.c, TermRead.c, NanoBoot.pl,
+					Stream.c, System.c
+	changes: * "nonvar/1" bug fixed.
+ 			 * ';', '#' and other trans-127 chars changed from _SO to _SY.
+			 * Following the CProlog "standard", in contexts where "|" did
+			   not indicate "the reminder of a list" this char used to be
+			   translated to ";". Now you are able to change this default
+			   behaviour by forcing "|" to be interpreted as a regular binary
+			   operator: use the command :- op(1140, xfx, '|'), for example.
+			   (the flag "barOpDefined" was introduced for dealing with this.)
+			 * [user] (consult(user)) bug fixed.
+			 * New I/O preds (see descr. below): peek/1, puts/1, gets/1, gets/2
+			 * New string pred (see descr. below): concats/2
+			 * Removed predicates: noindex/1, noindex/2 (Nanoprolog got more
+				clever and doesn't need to bother the user with indexing
+				issues anymore.)
+  
+ 970805: version 0.55
+ 	new file: TermChars.c
+              * Introduced support for the Latin-1 character set.
+ 	files changed: NanoProlog.c, TermRead.c, TermWrite.c, NanoBoot.pl
+	changes:  * Now, the name of the boot file is obtained from an (optional)
+			   command line argument or from the sysvar "NANO". Only as last
+			   resource an internally predefined name is used.
+              * The Latin-1 character set is now supported by all the
+			    i/o predicates.
+              * Now, predicates 'consult' and 'reconsult' append the
+			    suffix ".pl" to the file name (in case it is not already
+			    there).
+  
+ 970408: version 0.54
+ 	files changed: System.c, Interpreter.c, Compiler.c
+	changes: * added support to the cut predicate (!/0) when used inside
+                the system predicates: ,/2, ;/2, not/1, call/1, ->/2
+                (new instruction: PutCutLevel)
+             * new system predicate undef/0: it lists all
+               the predicates invoked by the currently loaded code
+               that are undefined.
+
+ 960924: version 0.53
+ 	files changed: System.c
+	changes: harmless bug fixed
+
+ 940225: version 0.52
+    files changed: Compiler.c, Index.c, Util.h, Term.h, Term.c, Arith.c,
+                   NanoProlog.pl, System.c, Predicates.c, Predicates.h
+    changes: 64 bit machine compatibility plus some polishing.
+             bug in 'reconsult' fixed.
+          Tested on some more machines: Alpha, Sparc, 88000, R6000, HP
+
+ 931120: version 0.51
+ 	files changed: TermRead.c, TermWrite.c, ThreadedCode.h, ...
+ 	changes: small bugs fixed
+             threaded code added
+
+ 931117: version 0.5
+
+/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
+
+System Predicates
+~~~~~~~~~~~~~~~~~
+(Most of them are described in "Introduction to Logic Programming" by Clocksin, Springer Verlag)
+
+CONTROL
+~~~~~~~
++P,+Q
++P;+Q
+!
+call(+G)
++G
+not +G
++P -> +Q ; +R 
++P -> +Q
+true
+fail
+repeat
+
+TERMS
+~~~~~
+var(?X)
+nonvar(?X)
+atom(?X)
+integer(?X)
+real(?X)
+number(?X)
+atomic(?X)
+extra(?X)
+functor(?Term, ?Name, ?Arity)
+arg(+ArgNum, +Term, -Arg)
+?Pred =.. ?List
+name(?Atom, ?String)
+?T1 == ?T2
+?T1 \== ?T2
+?T1 = ?T2
+?T1 \= ?T2
+concats(+List, ?String)	% concat the elements of List into a string result.
+						% List may contain: strings, texts, atoms, ints, reals
+						% Ex:
+	% ?- concats(["ola ", `ole `, oli, 34.5e-23, "z", 10, [10]],X), puts(X).
+	% ola ole oli3.45e-22z10
+	% X=[111,108,97,32,111,108,101,32,111,108,105,51,46,52,53,101,45,50,
+													50,122,49,48,10]
+
+ARITHMETIC
+~~~~~~~~~~
+-X is +Exp	
++X =:= +Y
++X =\= +Y
++X < +Y
++X > +Y
++X =< +Y
++X >= +Y
+succ(?N, ?M)			% M = N + 1 & N =>0
+
+Exp =
+	cputime
+	heapused
+	pi
+	maxint
+	minint
+	Exp + Exp
+	Exp - Exp
+	- Exp
+	Exp * Exp
+	Exp / Exp
+	Exp mod Exp
+	Exp ^ Exp
+	sqrt(Exp)
+	exp(Exp)
+	log(Exp)
+	log10(Exp)
+	Exp >> Exp
+	Exp << Exp
+	Exp // Exp
+	Exp /\ Exp
+	Exp \/ Exp
+	\ Exp
+	ceil(Exp)
+	floor(Exp)
+	sin(Exp)
+	cos(Exp)
+	tan(Exp)
+	asin(Exp)
+	acos(Exp)
+	atan(Exp)
+	[Exp]
+
+PROGRAM DATA BASE
+~~~~~~~~~~~~~~~~~
+asserta(+Clause)
+assertz(+Clause)
+assert(+Clause)			% fast compiler written in C
+clause(+Head, ?Body)
+retract(+Clause)
+retractall(+Head)
+findall(-Var,+Goal,-List)
+current_predicate(X)	% generates all predicates in the current unit
+visible_predicate(X)	% generates all visible predicates in the current unit
+imported_predicate(X,U)	% generates all imported predicates in the current unit
+system_predicate(X)		% generates all system predicates
+builtin_predicate(X)	% same as system_predicate(X)
+current_unit(X)			% generates the existent units
+current_ivar(X)			% generates the ivar names of the current unit
+current_op(P,T, Op)		% generates all the defined operators
+undef					% lists all the undefined invoked predicates
+
+INPUT / OUTPUT
+~~~~~~~~~~~~~~
+see(+File)
+tell(+File)
+seeing(-File)
+seen
+telling(-File)
+told
+read(-X)
+read(-X, -Names)
+write(?X)
+writeln(?X)
+writeq(?X)
+print(?X)
+display(?X)
+get0(-N)
+get(-N)
+gets(-S)			% reads an entire line as string
+skip(+N)
+peek(-N)			% peeks the next character
+put(+N)
+puts(+S)			% writes a string. Ex:  puts("ABC") --> ABC
+nl
+tab(+N)
+op(+Precedence, +Type, +Name)
+reset_ops			% reset all the operators to their initial state
+
+UNITS/CONTEXTS
+~~~~~~~~~~~~~~
+	A CONTEXT is a stack of units.
+	The CURRENT UNIT is the top of the current context
+
++U>>+Q					% context extension
++U<>+Q					% context top switching
+call_on_empty_context(+X)% context freeing
+call_on_context(+C,+X)	% context setting
+down(+X)				% context down.
+
+show_context			% shows current context
+unit(-U)				% gets current unit (top of context)
+unit_param(+N,-P)		% gets Nth current unit parameter
+unit_arity(-A)			% gets current unit arity
+units					% shows the currently defined units
+
+all						% lists all the declarations and code of the units
+list					% lists all the declars and code of the current unit
+locals					% lists all the declarations of the current unit
+
+Follows a sampling UNIT DEFINITION: Notice the "visibility declarations",
+	the "import declarations", and the "local imperative variable declarations"
+-----
+unit a(P)
+visible [xxx/0, yyy/0, ccc/0].
+import vvv/0 from d(222).
+ivar [u,v,x,y,z].
+
+xxx :- show_context, writeln('xxx: I am the a/0 version').
+ccc :- show_context, xxx.
+yyy :- unit_param(1,X), writeln(X).
+s:- set_ivar(v, [1,2,Z]).
+g(X) :- get_ivar(v, X).
+-----
+
+IMPERATIVE VARIABLES
+~~~~~~~~~~~~~~~~~~~~
+set_ivar(+Atom,+Term)	% sets the value of the ivariable named "Atom".
+get_ivar(+Atom,-Term)	% unifies term with the current value of an ivariable
+
+USER INTERFACE
+~~~~~~~~~~~~~~
+consult(+File)
+reconsult(+File)
+listing
+listing(+Name)
+listing(+Name/+Arity)
+statistics
+code(+Name, +Arity)	% lists the WAM code for predicate Name/Arity
+code(+Name)			% lists the WAM code for all the predicates named Name
+halt
+restart
+?A :- ?B			% asserts clause ?A :- ?B
+trace				% dumb debugger (only the call port is shown)
+notrace
+push +U				% push unit U on top of current context
+pop					% pop top of current context
+
+THREADS (coroutines)
+~~~~~~~~~~~~~~~~~~~~
+% Thread organisation: TREE. Killing a thread also kills all its descendants
+
+new_thread(+ThName, +Size, +Goal, +RestartGoal)
+	% Size in KBytes, RestartGoal activated in case Goal aborts due to error
+	% ThName, Goal, RestartGoal all atoms
+transfer_to_thread(+ThName,-Result)
+	% possible results: 'going', 'completed', 'failed', 'killed', 'error'
+actual_thread(-ThName)
+kill_thread(+ThName)
+
+TEXT (non-standard primitive type)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+% A 'text' is a compact transient representation of a portion of text.
+% 'Texts' are well suited for dealing with large amounts of text:
+   % Atoms are not so good at this because they are permanent entities;
+   % Strings are transient entities too and, functionally, they are more
+   %	flexible than 'texts'. However, a string element takes up 8 times
+   %	the space required by a 'text' element, and processing 'text' elements
+   %	is faster.
+
+% 'Text' literals are delimited by backquotes as in `hello`. Compare:
+    % "hello" is a string literal;
+    % 'hello' is an atom literal;
+    % hello   is also an atom literal;
+    % `hello` is a text literal.
+
+text(+T)			% checks if the argument is a 'text'
+gett(-T)			% reads an entire line as a 'text'.
+putt(+T)			% writes a 'text'. Ex:  puts(`ABC`) --> ABC
+slicet(+T,+A,+B,-R)	% returns a 'subtext'.  Ex:  slicec(`ABC`,1,1,X) --> X=`A`
+namet(?Atom,?T)		% 'text' version of name/2.
+concatt(+List, ?T)	% 'text' version of concats/2.
+
+
+/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
+
+TESTING:
+
+ To test CxProlog in your system consult the file 'z.pl'. The output should be something
+like this:
+
+[main] ?- [z].
+File zbm.pl consulted 4748 bytes 0.00061035 sec.
+File zstr_io.pl consulted 27260 bytes 0.030366 sec.
+File ztokens.pl consulted 33336 bytes 0.041221 sec.
+File zutils.pl consulted 11564 bytes 0.01177 sec.
+6.2337e+05 lips for 50 iterations taking 0.039268 secs (0.039268-0)
+6.5643e+05 lips for 50 iterations taking 0.037314 secs (0.037314-0)
+a(_215,[we,45,_664])
+unit main
+unit a
+unit b
+unit c
+unit d(P)
+File zu.pl consulted 3596 bytes 0.0037994 sec.
+[c,b,a,main]
+[c,b,a,main]
+xxx: I am the c/0 version
+[c,b,a,main]
+[b,a,main]
+xxx: I am the b/0 version
+[c,b,a,main]
+[b,a,main]
+[b,a,main]
+xxx: I am the b/0 version
+[b,a,main]
+[a,main]
+[a,main]
+xxx: I am the a/0 version
+[c,b,a,main]
+[d(222),b,a,main]
+[yyy: I am the d/1 version,222]
+File z.pl consulted 82828 bytes 0.16475 sec.
+yes
+
+
+/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
+
+COMPRESS:
+	make -f cx.70/Makefile pack
+UNCOMPRESS
+	gunzip CxProlog.70.tar.gz ; tar xvf CxProlog.70.tar

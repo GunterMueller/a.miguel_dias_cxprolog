@@ -1,0 +1,16 @@
+global [b5829000, b5829034]:
+  b5829000: (b4d392b2) ATOMIC main
+  b5829004: (b4d392b2) ATOMIC main
+  b5829008: (b4d38f1a) ATOMIC []
+  b582900c: (b4d63a68) FUNCTOR $$_top_call/1
+  b5829010: (b4d38f1a) ATOMIC []
+  b5829014: (b5829021) STRUCT b5829020
+  b5829018: (b4d392b2) ATOMIC main
+  b582901c: (b4d38f1a) ATOMIC []
+  b5829020: (b4d3c018) FUNCTOR ,/2
+  b5829024: (b582902d) STRUCT b582902c
+  b5829028: (b582c135) STRUCT b582c134
+  b582902c: (b4d3cd98) FUNCTOR mshow/1
+  b5829030: (b4d64572) ATOMIC global
+global ----------------------
+

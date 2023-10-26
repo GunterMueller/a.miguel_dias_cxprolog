@@ -1,0 +1,768 @@
+AtomPt GetCurrThreadName()
+{
+	return currThread->threadName ;
+}
+
+
+ThreadPt LookupThread(AtomPt atom)
+{
+	ThreadPt th ;	
+	if( (th = FindThread(rootThread, atom)) != nil )
+		return th ;
+	Error("Thread \"%s\" not found", AtomName(atom)) ;
+	return nil ;
+}
+
+ThreadPt LookupThread(AtomPt threadName) ;
+
+static ThreadPt FindThread(ThreadPt th, AtomPt name)
+{
+	ThreadPt t ;
+
+	if( th->threadName == name )
+		return th ;
+	dolist(th, th->sons, th->brother)
+		if( (t = FindThread(th, name)) != nil )
+			return t ;
+	return nil ;
+}
+
+	if( rootThread != nil && FindThread(rootThread, threadName) != nil )
+		Error("Thread \"%s\" was already created", AtomName(threadName)) ;
+
+
+alpha(_,[],[]).
+alpha(Es,[new(V,P)|Ts],[new(Vnew,Pnew)|Tsnew]) :-
+	alpha([V=Vnew|Es],P,Pnew),
+	alpha(Es,Ts,Tsnew).
+alpha(Es,[comm(V,A,G,P)|Ts],[comm(V,A,G,P)|Tsnew]) :-
+	alpha([V=Vnew|Es],P,Pnew),
+	alpha(Es,Ts,Tsnew).
+
+
+[].											\
+[File|Files] :- consult([File|Files]).		\
+											\
+consult([]) :- !.							\
+consult([File|Files]) :- !,					\
+	consult(File), consult(Files).			\
+consult(-File) :- !, reconsult(File).		\
+consult(File0) :-							\
+	add_pl(File0, File),					\
+	Heap0 is heapused,						\
+	Time0 is cputime,						\
+	silent_consult(File),					\
+	Time is cputime - Time0,				\
+	Heap is heapused - Heap0,				\
+	write(user,'File '), writeq(File),		\
+	write(user,' consulted '),				\
+	write(user,Heap), write(user,' bytes '),\
+	write(user,Time), writeln(user,' sec.').\
+											\
+reconsult([]) :- !.							\
+reconsult([File|Files]) :- !,				\
+	reconsult(File), reconsult(Files).		\
+reconsult(-File) :- !, reconsult(File).		\
+reconsult(File0) :-							\
+	add_pl(File0, File),					\
+	Heap0 is heapused,						\
+	Time0 is cputime,						\
+	silent_reconsult(File),					\
+	Time is cputime - Time0,				\
+	Heap is heapused - Heap0,				\
+	write(user,'File '), writeq(File),		\
+	write(user,' reconsulted '),			\
+	write(user,Heap), write(user,' bytes '),\
+	write(user,Time), writeln(user,' sec.').\
+" ;
+
+
+static void Bindd(register Pt l)
+{
+	register Pt h, v, a ;
+	
+	for( l = Drf(l) ; IsList(l) ; l = Drf(XListTail(l)) ) {
+		h = Drf(XListHead(l)) ;
+		if( not IsThisStruct(h, eqFunctor) )
+			Error("Not a proper (Var=Atom)-list") ;
+		v = Drf(XStructArg(h,0)) ;
+		a = Drf(XStructArg(h,1)) ;
+		if( IsVar(v) )
+			Assign(v, a) ;
+	}
+	if( l != tNilAtom )
+		Error("Not a proper list") ;
+}
+
+static void PWrite2()
+{
+	if( Drf(X1) != tCutAtom )
+		Bindd(X1) ;
+	WriteStream(currOut, TermAsStrMode(X0, mNormal)) ;
+	JumpNext()
+}
+
+static void PSWrite3()
+{
+	int srm = XTestStream(X0, mWrite) ;
+	if( Drf(X2) != tCutAtom )
+		Bindd(X2) ;
+	WriteStream(srm, TermAsStrMode(X1, mNormal)) ;
+	JumpNext()
+}
+
+
+
+/* CXPROLOG C'BUILTINS */
+
+static void PBasicLoadFile()
+{
+	BasicLoadFile(XTestAtomName(X0)) ;
+	JumpNext()
+}
+
+void InitLoad()
+{
+	InstallCBuiltinPred("load_basic", 1, PBasicLoadFile) ;
+}
+
+void BasicLoadFile(CharPt fileName) ;
+static Bool HandleSpecialCommand(Pt t)
+{
+	Pt op = XStructArg(t,0) ;
+	if( IsThisStruct(op, LookupFunctorByName("op", 3)) ) {
+		DefineOperator(XTestInt(XStructArg(op,0)),
+					   XTestAtomName(XStructArg(op,1)),
+					   XStructArg(op,2)) ;
+		return true ;
+	}
+	return false ;
+}
+
+void BasicLoadFile(CharPt fileName)
+{
+	register Pt t ;
+	Hdl saveH = H ;
+	
+	See(fileName) ;
+	while( (t = ReadTerm(nil)) != tEofAtom ) {
+		if( t == nil )
+			Error("Loading file '%s'", fileName) ;
+		elif( IsThisStruct(t, commandFunctor) ) {
+			if( not HandleSpecialCommand(t) ) {
+				Write("***  ") ; WriteTerm(t) ; Nl() ;
+				Error("Unable to deal with command when loading file '%s'",
+							fileName) ;
+			}
+		}
+		else {
+			CompileClause(t, true) ;
+		}
+		H = saveH ;
+	}
+	Seen() ;
+}
+
+
+void WritePrompt()
+{
+	Pt t ;
+
+	if( trace_flag )
+		WriteStd("(trace) ") ;
+	t = ImperativeVarGet(LookupAtom("@@_env_context")) ;
+	WriteTermStd(t) ;
+	WriteStd(" ?- ") ;
+	Flush("") ;
+}
+
+void WritePrompt(void) ;
+
+static void PTopRead2()
+{
+	Pt t, names ;
+
+	WritePrompt() ;
+	if( ( t = ReadTerm(&names) ) != nil &&
+		Unify(X0, t) && Unify(X1, names) ) JumpNext()
+	DoFail()
+}
+
+
+	InstallCBuiltinPred("@@_top_read", 2, PTopRead2) ;
+
+
+
+
+
+
+	compatibleIfThen_flag = false,
+
+
+  case 'c':	if( EqualStr(s, "compatible_if_then") ) {
+  				CompatibleIfThen(compatibleIfThen_flag = b) ; return ; }
+			break ;
+  case 'c':	if( EqualStr(s, "compatible_if_then") ) return compatibleIfThen_flag ;
+			break ;
+	PrintFlag("compatible_if_then", compatibleIfThen_flag) ;
+void CompatibleIfThen(Bool b)
+{
+	register PredicatePt pr ;
+
+	if( (pr = FindPredicateByName("->", 2)) == nil || NumberOfClauses(pr) != 2 )
+		return ;
+	Mesg("OK") ;
+}
+
+
+#define UseBigBuffer()		if( bigBufferInUse )						\
+								FataError("bigBuffer aready in use") ;	\
+							else bigBufferInUse = true
+#define FreeBigBuffer()		bigBufferInUse = false
+
+
+static void IndexTableCountClauses(int *nConsts, int *nCClauses, int *nStructs, int *nSClauses)
+{
+	register IndexElemPt el ;
+	
+	*nConsts = *nCClauses = *nStructs = *nSClauses = 0 ;
+	dotable(el, indexTable, indexTableSize)
+		if( not FreeIndexElem(el) )
+			if( IsStruct(el->idxArg) ) {
+				(*nStructs)++ ;
+				*nSClauses += el->nClauses ;
+			}
+			else {
+				(*nConsts)++ ;
+				*nCClauses += el->nClauses ;
+			}
+}
+
+
+	IndexTableCountClauses(&nConsts, &nCClauses, &nStructs, &nSClauses) ;
+
+Pt MakeExtraPermanent(Pt t)
+{
+	switch( XExtraSubTag(t) ) {
+		case queueSubTag: {
+			return t ;
+		}
+		default:
+			Default("MakeExtraPermanent") ;
+	}
+}
+
+
+
+static void PGetS()
+{
+	if( Unify(X0, StringToPString(GetLine())) ) JumpNext()
+	DoFail()
+}
+
+
+static void PPutS()
+{
+	PutString(PStringToString(X0)) ;
+	JumpNext()
+}
+
+static void PConcatS()
+{
+	if( Unify(X1, StringToPString(PConcatString(X0))) ) JumpNext()
+	DoFail()
+}
+
+	InstallCBuiltinPred("puts", 1, PPutS) ;
+	InstallCBuiltinPred("gets", 1, PGetS) ;
+	InstallCBuiltinPred("concats", 2, PConcatS) ;
+
+gets(-S)            % reads an entire line as string
+puts(+String)       % writes a string. Ex:  puts("ABC") --> ABC
+
+concats(+List, ?String) % concat the elements of List into a string result.
+                        % List may contain: strings, texts, atoms, ints, reals
+                        % Ex:
+    % ?- concats(["ola ", `ole `, oli, 34.5e-23, "z", 10, [10]],X), puts(X).
+    % ola ole oli3.45e-22z10
+    % X=[111,108,97,32,111,108,101,32,111,108,105,51,46,52,53,101,45,50,
+                                                    50,122,49,48,10]
+
+
+
+
+
+
+'$$_consult_term'(ivar Spec,_) :- !, ivar Spec, fail.
+'$$_reconsult_term'(ivar Spec,_) :- !, ivar Spec, fail.
+ivar [] :- !.
+ivar [H|T] :- !, ivar H, ivar T.
+ivar N :- !, create_ivar(N).
+ivar _ :- write('Invalid specification for ivar/1'), restart.
+
+
+
+#if unix
+
+#include "XAppl.h"
+#include "YServer.h"
+
+static void PNet()	/* flag stating that the NET predicates are installed */
+{
+	JumpNext()
+}
+
+
+/* XAPPLICATION */
+
+static void PXLaunch()
+{
+	if( XLaunch(XTestAtomName(X0)) ) JumpNext()
+	DoFail()
+}
+
+static void PXClose()
+{
+	XClose() ;
+	JumpNext()
+}
+
+static void PXSend()
+{
+	XSend(PStringToString(X0, cCharPt(codeBuff), maxCodePerClause Wd)) ;
+	JumpNext()
+}
+
+static void PXReceive()
+{
+	XReceive(cCharPt(codeBuff), maxCodePerClause Wd) ;	
+	if( Unify(X0, StringToPString(cCharPt(codeBuff))) ) JumpNext()
+	DoFail()
+}
+
+static void PXReceiveP()
+{
+	XReceiveP(cCharPt(codeBuff), maxCodePerClause Wd,
+					XTestAtomName(X1), XTestInt(X2)) ;	
+	if( Unify(X0, StringToPString(cCharPt(codeBuff))) ) JumpNext()
+	DoFail()
+}
+
+static void PXSetPrompt()
+{
+	XSetPrompt(XTestAtomName(X0)) ;
+	JumpNext()
+}
+
+static void PXSetTimeOut()
+{
+	XSetTimeOut(XTestInt(X0)) ;
+	JumpNext()
+}
+
+
+/* YSERVER */
+
+static void PYInstallSocket()
+{
+	YInstallSocket(XTestInt(X0)) ;
+	JumpNext()
+}
+
+static void PYGetRequest()
+{
+	YGetRequest(cCharPt(codeBuff), maxCodePerClause Wd) ;	
+	if( Unify(X0, StringToPString(cCharPt(codeBuff))) ) JumpNext()
+	DoFail()
+}
+
+static void PYReplyToRequest()
+{
+	CharPt s = PStringToString(X0, cCharPt(codeBuff), maxCodePerClause Wd) ;
+	
+	if( *s != '\0' ) YReplyToRequest(s) ;
+	YDoneRequest() ;
+	JumpNext()
+}
+
+#endif
+
+/* */
+
+void InstallMoreCBuiltinPreds()
+{
+#if unix
+	InstallCBuiltinPred("net", 0, PNet) ;
+
+	InstallCBuiltinPred("xappl_launch", 1, PXLaunch) ;
+	InstallCBuiltinPred("xappl_close", 0, PXClose) ;
+	InstallCBuiltinPred("xappl_send", 1, PXSend) ;
+	InstallCBuiltinPred("xappl_receive", 1, PXReceive) ;
+	InstallCBuiltinPred("xappl_receive", 3, PXReceiveP) ;
+	InstallCBuiltinPred("xappl_set_prompt", 1, PXSetPrompt) ;
+	InstallCBuiltinPred("xappl_set_timeout", 1, PXSetTimeOut) ;
+
+	InstallCBuiltinPred("ysocket_install", 1, PYInstallSocket) ;
+	InstallCBuiltinPred("ysocket_get", 1, PYGetRequest) ;
+	InstallCBuiltinPred("ysocket_reply", 1, PYReplyToRequest) ;
+#endif
+}
+
+
+
+
+	elif( iv->unit == builtinUnit && CurrUnit() != builtinUnit )
+		Error("You cannot locally redefine a builtin global variable '%s'", AtomName(atom)) ;
+
+	if( PredUnit(pr) == builtinUnit )
+		Error("Predicate '%s' cannot be imported into unit '%s' because is builtin",
+					PredNameArity(pr), FunctorNameArity(XTestFunctor(term))) ;
+
+
+	if( PredUnit(pr) == builtinUnit && CurrUnit() != builtinUnit )
+		Error("You cannot locally change the visibility of a builtin predicate '%s'",
+															PredNameArity(pr)) ;
+	if( PredUnit(pr) == builtinUnit && CurrUnit() != builtinUnit ) {
+		FreeSpaceTerm(clauseTerm) ;
+		Error("You cannot locally redefine builtin predicate '%s'", PredNameArity(pr)) ;
+	}
+
+
+/* Predicates without clauses refered in the Boot file
+							will be considered user predicates */
+	for( pr = &UnitPredicates(builtinUnit) ; *pr != nil ; ) {
+		if( PredHasNoClauses(*pr) && not PredIsC(*pr) ) {
+			p = *pr ;
+			*pr = PredNextU(*pr) ;
+			PredNextU(p) = UnitPredicates(mainUnit) ;
+			UnitPredicates(mainUnit) = p ;
+			PredUnit(p) = mainUnit ;
+		}
+		else pr = &PredNextU(*pr) ;
+	}
+
+
+	InstallCBuiltinPred("$get_context_cont", 1, PGetContextCont) ;
+	InstallCBuiltinPred("$set_context", 1, PGetContextCont) ;
+	InstallCBuiltinPred("$push_and_call", 2, PPushAndCall) ;
+
+static void PGetContextCont()
+{
+	if( C!=CC ) Mesg("diff") ;
+	if( Unify(X0, CC) ) JumpNext()
+	DoFail()
+}
+
+static void PSetContext()
+{
+	t0 = Drf(X0) ;
+	if( not IsList(t0) )
+		Error("A context must be a non-empty list") ;
+	U = TermToUnit(XListHead(t0)) ;
+	CC = C = t0 ;
+	JumpNext()
+}
+
+static void PPushAndCall()
+{
+	CU = U = TermToUnit(X0) ;
+	CC = C = MakeList(X0,C) ;
+	X0 = X1 ;
+	Jump(CallVar)
+}
+
+static void PDefinedInUnit()
+{
+	u = U ;
+	U = TermToUnit(X1) ;
+	pr = FindPredicateByTerm(X0, false) ;
+	U = u ;
+	if( pr != nil && PredHasClauses(pr) ) JumpNext()
+	DoFail()
+}
+
+static void PExecuteInUnit()
+{
+	u = U ;
+	U = TermToUnit(X1) ;
+	t0 = cPt(PrepareCall(X0)) ;
+	P = PredCode(cPredicatePt(t0)) ;
+	B0 = B ;
+	JumpNext()
+}
+
+static void PGetUnit()
+{
+	if( Unify(X0, MakeCleanTerm(UnitFunctor(U))) ) JumpNext()
+	DoFail()
+}
+
+static void PSetUnit()
+{
+	U = TermToUnit(X0) ;
+	JumpNext()
+}
+
+static void PGetUnitRef()
+{
+	if( UnifyWithAtomic(X0, TagAtom(U)) ) JumpNext()
+	DoFail()
+}
+
+static void PSetUnitRef()
+{
+	U = cUnitPt(XTestAtom(X0)) ;
+	JumpNext()
+}
+
+// @@@
+
+#define SkipCodeInst()			( codePt = SkipInst(codePt) )
+#define BackCodeInst()			( codePt = BackInst(codePt) )
+
+#define SkipCodeArgs(n)			( codePt = SkipArgs(codePt,n) )
+#define BackCodeArg()			( codePt = BackArg(codePt) )
+#define GetCodeArg()			( SkipCodeArgs(1), LookPt(BackArg(codePt)) )
+
+#if countInst
+#define GenInst(c)				(*cInstPt(codePt) =					\
+									OpCodeToInst(lastOpCode = c),	\
+									CountInst(lastOpCode),			\
+									SkipCodeInst())
+#else
+#define GenInst(c)				(*cInstPt(codePt) =					\
+									OpCodeToInst(lastOpCode = c),	\
+									SkipCodeInst())
+#endif
+
+#define GenArg(c)				(*codePt++ = cPt(c))
+
+#define Gen0(c)					GenInst(c)
+#define Gen1(c1,c2)				(Gen0(c1), GenArg(c2))
+#define Gen2(c1,c2,c3)			(Gen1(c1, c2), GenArg(c3))
+#define Gen3(c1,c2,c3,c4)		(Gen2(c1, c2, c3), GenArg(c4))
+#define Gen4(c1,c2,c3,c4,c5)	(Gen3(c1, c2, c3, c4), GenArg(c5))
+
+extern OpCode lastOpCode ;
+
+#define CodeStart()				( codeStart )
+#define CodeCurr()				( codePt )
+#define CodeTerms()				( codeTermsStart )
+#define CodeSize()				( CodeCurr() - CodeStart() )
+
+extern Hdl codeStart, codePt, codeTermsStart ;
+
+#define TestCodeOverflow()		if( codePt + 20 >= rellocCurr ) CodeOverflow()
+
+#define ToRelloc(s)				(*--rellocCurr = cPt(s))
+#define AssignRelloc(s, v)		((*cHdl(s) = cPt(v)), ToRelloc(s))
+
+extern Hdl rellocCurr, rellocEnd ;
+
+void RellocateCode(Hdl dest, Hdl origin, int size) ;
+void RellocateIndex(Hdl dest, Hdl origin, int size) ;
+void RellocateTerms(Hdl dest, Hdl origin, int size) ;
+
+void InitCodeGen(Hdl start, long size) ;
+void ResetCode(Hdl code) ;
+void RewriteCode(Bool useTerm) ;
+void RewriteCode2(Hdl start, int size) ;
+void CloseCode(void) ;
+void ResetUnifyPeep(void) ;
+
+void GenGetLevelY(int i, Bool global) ;
+void GenCutY(int i) ;
+void GenGetLevelX(int i, Bool global) ;
+void GenCutX(int i) ;
+void GenFail(void) ;
+void GenProceed(Bool neck) ;
+void GenDeallocateAndProceed(void) ;
+
+void GenBuildVoid(void) ;
+void GenUnifyVoid(void) ;
+void GenBuildXVariable(int i) ;
+void GenUnifyXVariable(int i) ;
+void GenBuildYVariable(int i) ;
+void GenUnifyYVariable(int i) ;
+void GenBuildXValue(int i) ;
+void GenUnifyXValue(register int i) ;
+void GenBuildYValue(int i) ;
+void GenUnifyYValue(int i) ;
+void GenBuildZValue(int i) ;
+void GenUnifyZValue(int i) ;
+void GenBuildXLocalValue(int i) ;
+void GenUnifyXLocalValue(register int i) ;
+void GenBuildYLocalValue(int i) ;
+void GenUnifyYLocalValue(int i) ;
+void GenBuildZLocalValue(int i) ;
+void GenUnifyZLocalValue(int i) ;
+void GenBuildConstant(Pt t) ;
+void GenUnifyConstant(Pt t) ;
+
+void GenGetYVariable(int p1, int i2) ;
+void GenGetXValue(int i1, int i2) ;
+void GenGetYValue(int p1, int i2) ;
+void GenGetZValue(int p1, int i2) ;
+void GenGetRecord(Pt r, int i) ;
+void GenGetConstant(Pt c, int i) ;
+
+void GenPutXVariable(int i1, int i2) ;
+void GenPutYVariable(int p1, int i2) ;
+void GenPutXValue(int i1, int i2) ;
+void GenPutUnsafeYValue(int m, int n) ;
+void GenPutYValue(int m, int n) ;
+void GenPutZValue(int p1, int i2) ;
+void GenPutConstant(Pt c, int i) ;
+void GenPutRecord(Pt r, int i) ;
+
+void GenPutConstantTerm(Pt term, int i) ;
+void GenGetConstantTerm(Pt term, int i) ;
+
+void GenVarContext(int reg, int envSize, Bool * neckDone) ;
+
+OpCode GetTryMeElseOpCode(int arity) ;
+OpCode GetSmallSwitchOnConstantOpCode(int n) ;
+OpCode GetSmallSwitchOnStructOpCode(int n) ;
+
+OpCode GetArithOpCode(CharPt name, int arity) ;
+void GenArithConstAndV(OpCode op, Pt c, int i, Bool isY) ;
+void GenArithVAndConst(OpCode op, int i, Pt c, Bool isY) ;
+
+void GenDerefX(int n) ;
+void GenDerefY(int n) ;
+void GenOutputNl(void) ;
+
+**********
+
+			if( cc == 'G' && Peek0() == '\'' ) {	// global var
+				NextChar() ;
+				NextChar() ;
+				ReadId(s, send) ;
+				tk = gvarTk ;
+				tkVal = LookupAtom(s) ;
+				break ;
+			}
+	gvarAtom = LookupAtom("$GVAR") ;
+
+			elif( atom == gvarAtom ) {
+				Pt t = Drf(XStructArg(term, 0)) ;
+				if( IsAtom(t) ) {
+					Put('G') ; Put('\'') ;
+					PutAtom(XAtom(t)) ;
+				}
+				else goto displayL ;
+			}
+		case gvarTk: {
+			Pt t = TagAtom(tkVal) ;
+			res = MakeStruct(LookupFunctor(gvarAtom,1), &t) ;
+			break ;
+		}
+
+
+	InstallCSysPred("getc", 2, PGetChain2) ;
+	InstallCSysPred("gets", 2, PGetS2) ;
+
+static void PGetChain2()
+{
+	char buff[1000] ;
+
+	TypeCheck("?a") ;
+	GetStringx(buff, XAtomName(R1)) ;
+	if( UnifyWithAtomic(X0, MakeExtra(buff, chainSubTag)) ) JumpNext()
+	DoFail()
+}
+
+static void PGetS2()
+{
+	char buff[1000] ;
+
+	TypeCheck("?a") ;
+	GetStringx(buff, XAtomName(R1)) ;
+	if( UnifyWithAtomic(X0, BufferToString(buff)) ) JumpNext()
+	DoFail()
+}
+
+void GetStringx(char *buff, char *sw) ;
+void GetStringx(char *buff, char *sw)
+{
+	register char *pt ;
+	register int c ;
+	
+	if( sw[0] == '\0' ) ;
+	elif( sw[0] == '~' && sw[1] == '\0' ) {
+			for(;;) {
+				c = GetStream(inputStream) ;
+				if( c == '\n' || c == CtrlZ ) break ;
+				*buff++ = c ;
+			}
+			UngetStream(inputStream, c) ;
+			*buff = '\0' ;
+	}
+	elif( sw[0] == '~' ) NotGetString(buff, sw + 1) ;
+	else YesGetString(buff, sw) ;
+}
+
+static void NotGetString(char *buff, char *stop)
+{
+	register char *pt ;
+	register int c ;
+	
+	for(;;)
+	{
+		c = GetStream(inputStream) ;
+		if( c == stop[0] || c == '\n' || c == CtrlZ ) goto end ;
+		for( pt = stop+1 ; *pt != '\0' ; pt++ )
+			if( c == *pt ) goto end ;
+		*buff++ = c ;
+	}
+end:
+	UngetStream(inputStream, c) ;
+	*buff = '\0' ;
+}
+
+static void YesGetString(char *buff, char *want)
+{
+	register char *pt ;
+	register int c ;
+	
+	for(;;)
+	{
+		c = GetStream(inputStream) ;
+		if( c == '\n' || c == CtrlZ ) goto end ;
+		for( pt = want ; *pt != '\0' ; pt++ )
+			if( c == *pt ) goto found ;
+		goto end ;
+	found:
+		*buff++ = c ;
+	}
+end:
+	UngetStream(inputStream, c) ;
+	*buff = '\0' ;
+}
+
+
+void Restart(char *fmt, ...) ;
+void Restart(char *fmt, ...)
+{
+	char s[1 Kb] ;
+	va_list p ;
+	
+	if( fmt != nil )
+	{
+		va_start(p, fmt) ;
+		vsprintf(s, fmt, p) ;
+		printf("%s\n", s) ;
+	}
+	PrologEvent(1) ;
+}
+
+gets(-S, +CharSet)	% reads a continuous sequence of chars inside CharSet.
+					% reading stops when first char outside CharSet is reached.
+					% A '~' at the first position of CharSet complements the set
+					% Exs: CharSet='abcd'; CharSet=' '; CharSet='~ '; CharSet='~ ;,'.
+
+concats([],[]).
+concats([H|T], R) :- concats(T,T2), as_string(H,HS), app(HS, T2, R).
+as_string(A,R) :- atom(A), !, name(A,R).
+as_string(I,R) :- integer(I), !, R = [I].
+as_string(X,X).

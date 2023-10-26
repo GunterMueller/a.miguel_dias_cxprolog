@@ -1,0 +1,1060 @@
+/*
+ *   This file is part of the CxProlog system
+
+ *   Term.c
+ *   by A.Miguel Dias - 1989/11/14
+ *   CITI - Centro de Informatica e Tecnologias da Informacao
+ *   Dept. de Informatica, FCT, Universidade Nova de Lisboa.
+ *   Copyright (C) 1990-2004 A.Miguel Dias, CITI, DI/FCT/UNL
+
+ *   CxProlog is free software; you can redistribute it and/or modify
+ *   it under the terms of the GNU General Public License as published by
+ *   the Free Software Foundation; either version 2 of the License, or
+ *   (at your option) any later version.
+
+ *   CxProlog is distributed in the hope that it will be useful,
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ *   GNU General Public License for more details.
+
+ *   You should have received a copy of the GNU General Public License
+ *   along with this program; if not, write to the Free Software
+ *   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ */
+
+#include "CxProlog.h"
+
+
+/* GLOBAL STACK CONTROL */
+
+#define PushHVar()			( ResetVar(H), cPt(H++) )
+#define PushH(v)			Push(H, v)
+#define PopH()				Pop(H)
+#define GrowH(n)			Grow(H, n)
+
+
+/* VARS */
+
+Pt Drf(register Pt t)
+{
+	VarValue(t) ;
+	return t ;
+}
+
+Pt MakeVar()
+{
+	CheckFreeSpaceOnStacks(1) ;
+	return PushHVar() ;
+}
+
+CharPt VarName(Pt t)
+{
+	if( IsVar(t) )
+		if( IsLocalVar(t) )
+			sprintf(retBuffer, "L%ld", Df(stacksEnd, t) ) ;
+		else sprintf(retBuffer, "_%ld", Df(t, stacksBegin) ) ;
+	else strcpy(retBuffer, "<NOT A VAR>") ;
+	return retBuffer ;
+}
+
+Bool IsVarName(CharPt s)
+{
+	return( s[0] == '_' || InRange(s[0],'A','Z') ) ;
+}
+
+
+/* STRUCTS */
+
+Pt MakeStruct(FunctorPt functor, Hdl args) /* pre: args in stacks */
+{
+	if( functor == listFunctor ) {
+		CheckFreeSpaceOnStacks(2) ;
+		PushH(args[0]) ;
+		PushH(args[1]) ;
+		return TagList(H - 2) ;
+	}
+	elif( FunctorArity(functor) == 0 )
+		return TagAtom(FunctorAtom(functor)) ;
+	else {
+		register int i, arity = FunctorArity(functor) ;
+		CheckFreeSpaceOnStacks(arity + 1) ;
+		PushH(functor) ;
+		dotimes(i, arity)
+			PushH(args[i]) ;
+		return TagStruct(H - arity - 1) ;
+	}
+}
+
+Pt MakeCleanStruct(FunctorPt functor)
+{
+	if( functor == listFunctor ) {
+		CheckFreeSpaceOnStacks(2) ;
+		PushHVar() ;
+		PushHVar() ;
+		return TagList(H - 2) ;
+	}
+	elif( FunctorArity(functor) == 0 )
+		return TagAtom(FunctorAtom(functor)) ;
+	else {
+		register int i, arity = FunctorArity(functor) ;
+		CheckFreeSpaceOnStacks(arity + 1) ;
+		PushH(functor) ;
+		dotimes(i, arity)
+			PushHVar() ;
+		return TagStruct(H - arity - 1) ;
+	}
+}
+
+Pt MakeUnStruct(FunctorPt functor, Pt arg) /* pre: arg in stacks */
+{
+	CheckFreeSpaceOnStacks(2) ;
+	PushH(functor) ;
+	PushH(arg) ;
+	return TagStruct(H - 2) ;
+}
+
+Pt MakeBinStruct(FunctorPt functor, Pt arg0, Pt arg1) /* pre: args in stacks */
+{
+	if( functor == listFunctor )
+			return MakeList(arg0, arg1) ;
+
+	CheckFreeSpaceOnStacks(3) ;
+	PushH(functor) ;
+	PushH(arg0) ;
+	PushH(arg1) ;
+	return TagStruct(H - 3) ;
+}
+
+Pt MakeList(Pt head, Pt tail) /* pre: args in stacks */
+{
+	CheckFreeSpaceOnStacks(2) ;
+	PushH(head) ;
+	PushH(tail) ;
+	return TagList(H - 2) ;
+}
+
+Pt MakeTriStruct(FunctorPt functor, Pt arg0, Pt arg1, Pt arg2) /* pre: args in stacks */
+{
+	CheckFreeSpaceOnStacks(4) ;
+	PushH(functor) ;
+	PushH(arg0) ;
+	PushH(arg1) ;
+	PushH(arg2) ;
+	return TagStruct(H - 4) ;
+}
+
+CharPt XStructNameArity(Pt t)
+{
+	sprintf(retBuffer, "%s/%d", XStructName(t), XStructArity(t)) ;
+	return retBuffer ;
+}
+
+void SplitNeckTerm(Pt c, Hdl parts)
+{
+	c = Drf(c) ;
+	if( IsThisStruct(c, neckFunctor) ) {
+		parts[0] = Drf(XStructArg(c,0)) ;
+		parts[1] = Drf(XStructArg(c,1)) ;
+	}
+	else {
+		parts[0] = c ;
+		parts[1] = tTrueAtom ;
+	}
+}
+
+int XUnitParam(register Pt t)
+{
+	int i ;
+	t = Drf(t) ;
+	if( !IsUnitParam(t) )
+		TypeError2("UNIT-PARAMETER", nil) ;
+	i = XTestInt(XStructArg(t, 0)) ;
+	if( !InRange(i,1,UnitArity(CurrUnit())) )
+		TypeError2("UNIT-PARAMETER", nil) ;
+	return i-1 ;
+}
+
+
+/* LISTS */
+
+Pt ArrayToOpenList(register Hdl array, register Size n) /* pre: n > 0 */
+{
+	register Pt list ;	
+	CheckFreeSpaceOnStacks(2 * n) ;
+	list = array[ --n ] ;	
+	while( n-- ) {
+		PushH(array[ n ]) ;
+		PushH(list) ;
+		list = TagList(H - 2) ;
+	}
+	return list ;
+}
+
+Pt ArrayToList(register Hdl array, register Size n)
+{
+	register Pt list ;
+	CheckFreeSpaceOnStacks(2 * n) ;
+	list = tNilAtom ;
+	while( n-- ) {
+		PushH(array[ n ]) ;
+		PushH(list) ;
+		list = TagList(H - 2) ;
+	}
+	return list ;
+}
+
+Pt ArrayToListRev(register Hdl array, register Size n)
+{
+	register Pt list ;
+	CheckFreeSpaceOnStacks(2 * n) ;
+	list = tNilAtom ;
+	while( n-- ) {
+		PushH(*array++) ;
+		PushH(list) ;
+		list = TagList(H - 2) ;
+	}
+	return list ;
+}
+
+Hdl ListToArray(Pt list, Size *len)
+{
+	UseScratch() ;
+	for( list = Drf(list) ; IsList(list) ; list = Drf(XListTail(list)) )
+		ScratchPush(Drf(XListHead(list))) ;
+	if( list != tNilAtom )
+		TypeError2("PROPERLY-TERMINATED-LIST", nil) ;
+	*len = ScratchUsed() ;
+	return cHdl(FreeScratch()) ;
+}
+
+Size ListLength(register Pt list)
+{
+	Size n = 0 ;
+	for( list = Drf(list) ; IsList(list) ; list = Drf(XListTail(list)) )
+		n++ ;
+	if( list != tNilAtom )
+		TypeError2("PROPERLY-TERMINATED-LIST", nil) ;
+	return n ;
+}
+
+static Bool Belongs(Pt t, register Pt list)	/* pre: t already deref */
+{
+	for( list = Drf(list) ; IsList(list) ; list = Drf(XListTail(list)) )
+		if( t == Drf(XListHead(list)) ) return true ;
+	if( list != tNilAtom )
+		TypeError2("PROPERLY-TERMINATED-LIST", nil) ;
+	return false ;
+}
+
+
+/* PSTRINGS */
+
+static void DoConcatPString(Pt list)
+{
+	for( list = Drf(list) ; IsList(list) ; list = Drf(XListTail(list)) ) {
+		Pt t = Drf(XListHead(list)) ;
+		if( IsList(t) )
+			DoConcatPString(t) ;
+		else
+			ScratchAddTerm(t) ;
+	}
+	if( list != tNilAtom )
+		TypeError2("PROPERLY-TERMINATED-LIST", nil) ;
+}
+
+static CharPt ConcatPString(Pt list)
+{
+	UseScratch() ;
+	DoConcatPString(list) ;
+	ScratchAddCh('\0') ;
+	return FreeScratch() ;
+}
+
+Pt StringToPString(CharPt s)
+{
+	register Size n = strlen(s) ;
+	register Pt list ;
+	CheckFreeSpaceOnStacks(2 * n) ;
+	list = tNilAtom ;
+	while( n-- ) {
+		PushH(MakeCode(s[n])) ;
+		PushH(list) ;
+		list = TagList(H - 2) ;
+	}
+	return list ;
+}
+
+
+/* ASTRINGS */
+
+static Pt StringToAString(CharPt s)
+{
+	register Size n = strlen(s) ;
+	register Pt list ;
+	CheckFreeSpaceOnStacks(2 * n) ;
+	list = tNilAtom ;
+	while( n-- ) {
+		PushH(MakeChar(s[n])) ;
+		PushH(list) ;
+		list = TagList(H - 2) ;
+	}
+	return list ;
+}
+
+
+/* TERMS */
+
+Hdl termSegm ;  /* Small buffer used to build terms */
+
+CharPt TermTypeStr(Pt t)
+{
+	t = Drf(t) ;
+	return
+		t == nil	? "NIL-POINTER" :
+		IsVar(t)	? "VAR" :
+		IsStruct(t)	? "STRUCT" :
+		IsList(t)	? "LIST" :
+		IsAtom(t)	? "ATOM" :
+		IsInt(t)	? "INT" :
+		IsFloat(t)	? "FLOAT" :
+		IsExtra(t)	? (char *)StrUpper(XExtraTypeName(t)) :
+					  "UNKNOWN"
+	;
+}
+
+void TermAtomGCMark(register Pt t)
+{
+	if( t == nil ) return ;
+	UseScratch() ;
+	for(;;) {
+		VarValue(t) ;
+		if( IsAtom(t) )
+			AtomGCMark(XAtom(t)) ;
+		elif( IsStruct(t) ) {
+			register int arity = XStructArity(t) ;
+			register Hdl args = XStructArgs(t) ;
+			t = *args ;
+			while( --arity ) ScratchPush(*++args) ;
+			continue ;
+		}
+		elif( IsList(t) ) {
+			ScratchPush(XListTail(t)) ;
+			t = XListHead(t) ;
+			continue ;
+		}
+	/* Extras are ignored on purpose */	
+		if( ScratchUsed() == 0 ) break ;
+		else t = ScratchPop() ;
+	}
+	FreeScratch() ;
+}
+
+
+/* TermSize is called each time a term is about to be asserted,
+	assigned ou copied */
+
+Size TermSize(register Pt t)
+{
+	register Size size = 0 ;
+	UseScratch() ;
+	for(;;) {
+		VarValue(t) ;
+		if( IsStruct(t) ) {
+			register int arity = XStructArity(t) ;
+			register Hdl args = XStructArgs(t) ;
+			if( (size += arity + 1) > maxTermSize ) /* avoids infinite loop */
+				DatabaseError("Term too large") ;
+			t = *args ;
+			while( --arity ) ScratchPush(*++args) ;
+			continue ;
+		}
+		elif( IsList(t) ) {
+			if( (size += 2) > maxTermSize )
+				DatabaseError("Term too large") ;
+			ScratchPush(XListTail(t)) ;
+			t = XListHead(t) ;
+			continue ;
+		}
+		if( ScratchUsed() == 0 ) break ;
+		else t = ScratchPop() ;
+	}
+	FreeScratch() ;
+	return size ;
+}
+
+static Pt CopyTerm(register Pt t, register Hdl to, Pt env, Bool asserting, Bool convUnitParams)
+{
+	Pt res ;
+	register Hdl where = &res ;	
+	Hdl bottom = to ;
+	TrailSave() ;	/* trick: trail is instrumental to refreshing vars */
+	UseScratch() ;
+	for(;;) {
+		VarValue(t) ;
+		if( IsStruct(t) ) {
+			if( convUnitParams && IsUnitParam(t) ) {
+				t = Z(OutParam(XUnitParam(t))) ;
+				continue ;
+			}
+			else {
+				FunctorPt f = XStructFunctor(t) ;
+				int arity = FunctorArity(f) ;
+				register Hdl args = XStructArgs(t) ;
+				*where = TagStruct(to) ;
+				Push(to, f) ;
+				where = to++ ;
+				t = *args ;
+				while( --arity ) {
+					ScratchPush(to) ;
+					Push(to, *++args) ;
+				}
+				continue ;
+			}
+		}
+		elif( IsList(t) ) {
+			*where = TagList(to) ;
+			where = to++ ;
+			ScratchPush(to) ;
+			Push(to, XListTail(t)) ;
+			t = XListHead(t) ;
+			continue ;
+		}
+		elif( IsVar(t) ) {
+			if( Le(bottom,t) && Lt(t,to) ) /* var already refreshed */
+				*where = t ;
+			elif( env == nil || Belongs(t, env) ) { /* var to refresh */
+				ResetVar(where) ;
+				Assign(t, where) ; /* var not to refresh */
+			}
+			else *where = t ;
+		}
+		else
+			*where = t ;
+
+		if( asserting ) {
+			if( IsAtom(t) )
+				AtomPermanent(XAtom(t)) = true ;
+			elif( IsExtra(t) )
+				DatabaseError("A clause cannot contain a '%s' literal",
+							XExtraTypeName(t)) ;
+		}
+
+		if( ScratchUsed() == 0 ) break ;
+		else {
+			where = cHdl(ScratchPop()) ;
+			t = *where ;
+		}	
+	}
+	FreeScratch() ;
+	TrailRestore() ;
+	return res ;
+}
+
+static Pt GetFreeVars(register Pt t, Size *nVars)
+{
+	Pt list = tNilAtom ;
+	if( nVars != nil ) *nVars = 0 ;
+	TrailSave() ;	/* trick: trail is instrumental to not repeating vars */
+	UseScratch() ;
+	for(;;) {
+		VarValue(t) ;
+		if( IsVar(t) ) {
+			if( nVars != nil )
+				(*nVars)++ ;
+			else
+				list = MakeList(t, list) ;
+				Assign(t, tNilAtom) ; /* mark var as "already seen var" */
+		}
+		elif( IsStruct(t) ) {
+			register int arity = XStructArity(t) ;
+			register Hdl args = XStructArgs(t) ;
+			t = *args ;
+			while( --arity ) ScratchPush(*++args) ;
+			continue ;
+		}
+		elif( IsList(t) ) {
+			ScratchPush(XListTail(t)) ;
+			t = XListHead(t) ;
+			continue ;
+		}
+		if( ScratchUsed() == 0 ) break ;
+		else t = ScratchPop() ;
+	}
+	FreeScratch() ;
+	TrailRestore() ;
+	return list ;
+}
+
+static Bool SubTerm(register Pt s, register Pt t)
+{
+	Bool res ;
+	Hdl trailLevel = TR ; /* Cannot use Scratch here because it is not reentrant */
+	for(;;) {
+		VarValue(t) ;
+		if( Equal(t, s) ) {
+			res = true ;
+			break ;
+		}
+		if( IsStruct(t) ) {
+			register int arity = XStructArity(t) ;
+			register Hdl args = XStructArgs(t) ;
+			t = *args ;
+			while( --arity ) PushTrail(*++args) ;
+			continue ;
+		}
+		elif( IsList(t) ) {
+			PushTrail(XListTail(t)) ;
+			t = XListHead(t) ;
+			continue ;
+		}
+		if( TR == trailLevel ) {
+			res = false ;
+			break ;
+		}
+		else t = Pop(TR) ;
+	}
+	TR = trailLevel ;
+	return res ;
+}
+
+Pt AllocateTermForAssert(register Pt t)
+{
+	VarValue(t) ;
+	if( IsRecord(t) )
+		return CopyTerm(t, TempBlockAllocate(TermSize(t)), nil, true, false) ;
+	else
+		return t ;
+}
+		
+Pt AllocateTermForAssign(register Pt t)
+{
+	VarValue(t) ;
+	if( IsRecord(t) )
+		return CopyTerm(t, TempBlockAllocate(TermSize(t)), nil, false, false) ;
+	elif( IsVar(t) ) {
+		static Pt freeVar = cPt(&freeVar) ;
+		return freeVar ;
+	}
+	else
+		return t ;
+}
+
+void ReleaseTerm(register Pt t)
+{
+	if( t == nil ) return ;
+	VarValue(t) ;
+	if( IsRecord(t) )
+		BlockRelease(XPt(t)) ;
+}
+
+static Pt ZPushTermWithEnv(Pt env, register Pt t, Bool convUnitParams)
+{
+	VarValue(t) ;
+	if( IsRecord(t) ) {
+        extern Pt ZT ;
+		Size size = TermSize(t) ;
+		ZT = t ; /* save on ZT because of possible rellocation */
+		ZEnsureFreeSpaceOnStacks(size, "ZPushTermWithEnv/Record") ;
+		GrowH(size) ;
+		return CopyTerm(ZT, H - size, env, false, convUnitParams) ;
+	}
+	elif( IsVar(t) ) {
+		ZEnsureFreeSpaceOnStacks(1, "ZPushTermWithEnv/Var") ;
+		if( env == nil || Belongs(t, env) )
+			return PushHVar() ;
+		else return t ;
+	}
+	else
+		return t ;
+}
+
+Pt ZPushTerm(Pt t)
+{
+	return ZPushTermWithEnv(nil, t, false) ;
+}
+
+Pt ZPushTerm_ConvUnitParams(Pt t)
+{
+	return ZPushTermWithEnv(nil, t, true) ;
+}
+
+
+/* NUMBER VARS */
+
+static Size numberVarsN ;
+
+static void DoNumberVars(register Pt t)
+{
+	VarValue(t) ;
+	if( IsAtomic(t) ) ;
+	elif( IsVar(t) ) {
+		Assign(t, MakeUnStruct(varFunctor, MakeInt(numberVarsN++))) ;
+	}
+	elif( IsList(t) ) {
+		DoNumberVars(XListHead(t)) ;
+		DoNumberVars(XListTail(t)) ;
+	}
+	elif( IsStruct(t) ) {
+		int i, n = XStructArity(t) ;
+		dotimes(i, n)
+			DoNumberVars(XStructArg(t, i)) ;
+	}
+	else InternalError("DoNumberVars") ;
+}
+
+static Size NumberVars(Pt t, Size start)
+{
+	numberVarsN = start ;
+	DoNumberVars(t) ;
+	return( numberVarsN ) ;
+}
+
+
+/* TYPE ERRORS */
+
+Pt TestAtom(register Pt t)
+{
+	VarValue(t) ;
+	if( IsAtom(t) ) return t ;
+	return TypeError2("ATOM", t) ;
+}
+AtomPt XTestAtom(register Pt t)
+{
+	VarValue(t) ;
+	if( IsAtom(t) ) return XAtom(t) ;
+	return TypeError2("ATOM", t) ;
+}
+
+CharPt XTestAtomName(register Pt t)
+{
+	VarValue(t) ;
+	if( IsAtom(t) ) return XAtomName(t) ;
+	return TypeError2("ATOM", t) ;
+}
+
+PInt XTestInt(register Pt t)
+{
+	VarValue(t) ;
+	if( IsInt(t) ) return XInt(t) ;
+	return ITypeError2("INT", t) ;
+}
+
+PInt XTestPosInt(register Pt t)
+{
+	VarValue(t) ;
+	if( IsPos(t) ) return XInt(t) ;
+	return ITypeError2("POSITIVE-INT", t) ;
+}
+
+PInt XTestNat(register Pt t)
+{
+	VarValue(t) ;
+	if( IsNat(t) ) return XInt(t) ;
+	return ITypeError2("NATURAL-NUMBER", t) ;
+}
+
+PInt XTestCode(register Pt t)
+{
+	VarValue(t) ;
+	if( IsCode(t) ) return XCode(t) ;
+	return ITypeError2("CODE", t) ;
+}
+
+PInt XTestByte(register Pt t)
+{
+	VarValue(t) ;
+	if( IsByte(t) ) return XByte(t) ;
+	return ITypeError2("BYTE", t) ;
+}
+
+PInt XTestChar(Pt t)
+{
+	VarValue(t) ;
+	if( IsAtom(t) )
+		if( t == tEofAtom ) return eofMark ;
+		else {
+			CharPt s = XAtomName(t) ;
+			if( s[0] == '\0' || s[1] == '\0') return s[0] ;
+		}
+	return ITypeError2("CHAR", t) ;
+}
+
+PInt XTestIntRange(register Pt t, int a, int z)
+{
+	Str256 s ;
+	VarValue(t) ;
+	if( IsInt(t) && InRange(XInt(t), a, z) ) return XInt(t) ;
+	sprintf(s, "RANGE(%d..%d)", a, z) ;
+	return ITypeError2(s, t) ;
+}
+
+PFloat XTestFloat(register Pt t)
+{
+	VarValue(t) ;
+	if( IsInt(t) ) return XInt(t) ;
+	if( IsFloat(t) ) return XFloat(t) ;
+	return ITypeError2("NUMBER", t) ;
+}
+
+Bool XTestBool(register Pt t)
+{
+	VarValue(t) ;
+	if( t == tTrueAtom ) return true ;
+	if( t == tFalseAtom ) return false ;
+	return ITypeError2("BOOL", t) ;
+}
+
+Bool XTestOnOff(register Pt t)
+{
+	VarValue(t) ;
+	if( t == tOnAtom ) return true ;
+	if( t == tOffAtom ) return false ;
+	return ITypeError2("'on/off'", t) ;
+}
+
+Pt XTestVar(register Pt t)
+{
+	VarValue(t) ;
+	if( IsVar(t) ) return t ;
+	return TypeError2("VAR", t) ;
+}
+
+Pt XTestNonVar(register Pt t)
+{
+	VarValue(t) ;
+	if( !IsVar(t) ) return t ;
+	return TypeError2("NON-VAR", t) ;
+}
+
+FunctorPt XTestFunctor(register Pt t)
+{
+	VarValue(t) ;
+	if( IsStruct(t) ) return XStructFunctor(t) ;
+	if( IsList(t) ) return listFunctor ;
+	if( IsAtom(t) ) return LookupFunctor(XAtom(t), 0) ;
+	return TypeError2("STRUCT, LIST or ATOM", t) ;
+}
+
+FunctorPt XTestFunctor2(Pt t1, Pt t2)
+{
+	return( LookupFunctor(XTestAtom(t1), XTestNat(t2)) ) ;
+}
+
+FunctorPt XTestStruct(register Pt t, Hdl *args)
+{
+	VarValue(t) ;
+	if( IsStruct(t) ) { *args = XStructArgs(t) ; return XStructFunctor(t) ; }
+	if( IsList(t) ) { *args = XListArgs(t) ; return listFunctor ; }
+	if( IsAtom(t) ) { *args = H ; return LookupFunctor(XAtom(t), 0) ; }
+	return TypeError2("STRUCT, LIST or ATOM", t) ;
+}
+
+
+/* CXPROLOG C'BUILTINS */
+
+static void PVar()
+{
+	MustBe( IsVar(Drf(X0)) )
+}
+
+static void PNonVar()
+{
+	MustBe( !IsVar(Drf(X0)) )
+}
+
+static void PAtom()
+{
+	MustBe( IsAtom(Drf(X0)) )
+}
+
+static void PPInt()
+{
+	MustBe( IsInt(Drf(X0)) )
+}
+
+static void PPFloat()
+{
+	MustBe( IsFloat(Drf(X0)) )
+}
+
+static void PNumber()
+{
+	MustBe( IsNumber(Drf(X0)) )
+}
+
+static void PAtomic()
+{
+	MustBe( IsAtomic(Drf(X0)) )
+}
+
+static void PFunctor()
+{
+	Pt t0 = Drf(X0) ;
+	if( IsStruct(t0) )
+		MustBe( UnifyWithAtomic(X1, TagAtom(XStructAtom(t0))) &&
+				UnifyWithNumber(X2, MakeInt(XStructArity(t0))) )
+	elif( IsList(t0) )
+		MustBe( UnifyWithAtomic(X1, tDotAtom) &&
+				UnifyWithNumber(X2, MakeInt(2)) )
+	elif( IsAtomic(t0) || IsExtra(t0) )
+		MustBe( UnifyWithAtomic(X1, t0) && UnifyWithNumber(X2, MakeInt(0)) )
+	elif( IsVar(t0) ) {
+		Pt t1 = Drf(X1) ;
+		Pt t2 = Drf(X2) ;
+		Ensure( IsAtomic(t1) && IsNat(t2) )
+		if( XInt(t2) == 0 )
+			MustBe( UnifyWithAtomic(t0, t1) )
+		elif( IsAtom(t1) )
+			MustBe( Unify(t0, MakeCleanStruct(LookupFunctor(XAtom(t1), XInt(t2)))) )
+	}
+	InternalError("PFunctor") ;
+}
+
+static void PArg()
+{
+	PInt n = XTestInt(X0) ;
+	Pt t1 = Drf(X1) ;
+	if( IsStruct(t1) )
+		MustBe( InRange(n,1,XStructArity(t1)) && Unify(X2, XStructArg(t1, n-1)) )
+	elif( IsList(t1) )
+		MustBe( InRange(n,1,2) && Unify(X2, XListArg(t1, n-1)) )
+	else TypeError2("STRUCT or LIST", t1) ;
+}
+
+static void PIns()
+{
+	PInt pos = XTestPosInt(X0) ;
+	Pt t, t1 = Drf(X1) ;
+	Hdl args, h ;
+	FunctorPt f ;
+	int newArity, n ;
+	if( IsVar(t1) ) {
+		f = XTestStruct(X3, &args) ;
+		Ensure( (newArity = FunctorArity(f) - 1) >= 0 )
+		if( pos > newArity + 1 ) pos = newArity + 1 ;
+		t = MakeStruct(LookupFunctor(FunctorAtom(f), newArity), args) ;
+		if( (n = newArity - pos) >= 0 ) {
+			for( h = H - n ; n-- ; h++ )
+				h[-1] = h[0] ;
+			h[-1] = args[newArity] ;
+		}
+		MustBe( Unify(X1, t) && Unify(X2, args[pos-1]) )
+	}
+	else {
+		f = XTestStruct(t1, &args) ;
+		newArity = FunctorArity(f) + 1 ;
+		if( pos > newArity ) pos = newArity ;
+		t = MakeStruct(LookupFunctor(FunctorAtom(f), newArity), args) ;
+		n = newArity - pos ;
+		for( h = H ; n-- ; h-- )
+			h[-1] = h[-2] ;
+		h[-1] = X2 ;
+		MustBe( Unify(X3, t) )
+	}
+}
+
+static void PInsStart()
+{
+	Hdl args, h ;
+	FunctorPt f = XTestStruct(X0, &args) ;
+	int newArity = FunctorArity(f) + 1 ;
+	Pt t = MakeStruct(LookupFunctor(FunctorAtom(f), newArity), args) ;
+	int n = newArity - 1 ;
+	for( h = H ; n-- ; h-- )
+		h[-1] = h[-2] ;
+	h[-1] = X1 ;
+	MustBe( Unify(X2, t) )
+}
+
+static void PInsEnd()
+{
+	Hdl args ;
+	FunctorPt f = XTestStruct(X0, &args) ;
+	int newArity = FunctorArity(f) + 1 ;
+	Pt t = MakeStruct(LookupFunctor(FunctorAtom(f), newArity), args) ;
+	H[-1] = X1 ;
+	MustBe( Unify(X2, t) )
+}
+
+static void PCopyTerm()
+{
+	Pt t = ZPushTerm(X0) ; /* stacks may grow */
+	MustBe( Unify(X1, t) )
+}
+
+static void PCopyTermWithEnv()
+{
+	Pt t = ZPushTermWithEnv(X0, X1, false) ; /* stacks may grow */
+	MustBe( Unify(X2, t) )
+}
+
+static void PFreeVars()
+{
+	Size nVars ;
+	GetFreeVars(X0, &nVars) ;
+	ZEnsureFreeSpaceOnStacks(2 * nVars, "PFreeVars") ; /* stacks may grow */
+	MustBe( Unify(X1, GetFreeVars(X0, nil)) )
+}
+
+static void PSubTerm(void)
+{
+	MustBe( SubTerm(X0, X1) )
+}
+
+static Bool AtomOrNumber_CodesOrChars(Bool any, Bool atom, Bool codes)
+{
+	Pt t0 = Drf(X0) ;
+	CharPt s ;
+	if( IsAtom(t0) && (any || atom) ) {
+		s = XAtomName(t0) ;
+		ZEnsureFreeSpaceOnStacks(2 * strlen(s), CurrCPredNameArity()) ; /* stacks may grow */
+		return Unify(X1, codes ? StringToPString(s) : StringToAString(s)) ;
+	}
+	if( IsNumber(t0) && (any || !atom) ) {
+		s = XNumberAsStr(t0) ;
+		ZEnsureFreeSpaceOnStacks(2 * strlen(s), CurrCPredNameArity()) ; /* stacks may grow */
+		return Unify(X1, codes ? StringToPString(s) : StringToAString(s)) ;
+	}
+	elif( IsVar(t0) ) {
+		Pt t1 = Drf(X1) ;
+		if( IsList(t1) || t1 == tNilAtom ) {
+			UseScratch() ;
+			if( codes ) ScratchAddPString(t1) ; else ScratchAddAString(t1) ;
+			ScratchAddCh('\0') ;
+			s = FreeScratch() ;
+			if( any ) {
+				t1 = NumberFromStr(s) ;
+				if( t1 == nil ) t1 = MakeTempAtom(s) ;
+			}
+			else t1 = atom ? MakeTempAtom(s) : NumberFromStr(s) ;
+			return t1 != nil && UnifyWithAtomic(t0, t1) ;
+		}
+		else return ITypeError2("LIST", t1) ;
+	}
+	else return false ;
+}
+
+static void PName()
+{
+	MustBe( AtomOrNumber_CodesOrChars(true, true, true) )
+}
+
+static void PAtomCodes()
+{
+	MustBe( AtomOrNumber_CodesOrChars(false, true, true) )
+}
+
+static void PAtomChars()
+{
+	MustBe( AtomOrNumber_CodesOrChars(false, true, false) )
+}
+
+static void PNumberCodes()
+{
+	MustBe( AtomOrNumber_CodesOrChars(false, false, true) )
+}
+
+static void PNumberChars()
+{
+	MustBe( AtomOrNumber_CodesOrChars(false, false, false) )
+}
+
+static void PCharCode()
+{
+	Pt t0 = Drf(X0) ;
+	if( IsAtom(t0) )
+		MustBe( UnifyWithNumber(X1, MakeCode(XTestChar(t0))) )
+	elif( IsVar(t0) ) {
+		if( UnifyWithAtomic(t0, MakeChar(XTestCode(X1))) ) JumpNext()
+		InternalError("PCharCode") ;
+	}
+	TypeError2("CHAR", t0) ;
+}
+
+static void PNumberVars()
+{
+	MustBe( UnifyWithAtomic(X2, MakeInt(NumberVars(X0, XTestNat(X1)))) )
+}
+
+static void PSlice()
+{
+	CharPt s = XTestAtomName(X0) ;
+	Size i = strlen(s) ;
+	PInt i0 = XTestInt(X1) ;
+	PInt i1 = XTestInt(X2) ;
+	if( i0 >= 0 && i1 >= 0 ) {
+		if( i0 < 1 ) i0 = 1 ;
+		if( i0 > i ) i0 = i ;
+		if( i1 < 1 ) i1 = 1 ;
+		if( i1 > i ) i1 = i ;
+		Ensure( i1 >= i0 )
+		UseScratch() ;
+		ScratchAddNStr(s + i0 - 1, i1 - i0 + 1) ;
+		ScratchAddCh('\0') ;
+		MustBe( Unify(X3, MakeTempAtom(FreeScratch())) )
+	}
+	elif( i0 < 0 && i1 < 0 ) {
+		if( i0 < -i ) i0 = -i ;
+		if( i1 < -i ) i1 = -i ;
+		Ensure( i1 >= i0 )
+		UseScratch() ;
+		ScratchAddNStr(s + i + i0, i1 - i0 + 1) ;
+		ScratchAddCh('\0') ;
+		MustBe( Unify(X3, MakeTempAtom(FreeScratch())) )
+	}
+	else ArithError("The two integer arguments of slice/4 must have the same arithmetic signal") ;
+}
+
+static void PConcat()
+{
+	MustBe( Unify(X1, MakeTempAtom(ConcatPString(X0))) )
+}
+
+static void PConcatRev()
+{
+	MustBe( Unify(X0, MakeTempAtom(ConcatPString(X1))) )
+}
+
+static void PUnique()
+{
+	static Word w = -2 ;
+	sprintf(UseScratch(), "$%%u%lu", ++w) ;
+	MustBe( Unify(X0, MakeTempAtom(FreeScratch())) )
+}
+
+void TermsInit()
+{
+	termSegm = PermBlockAllocate(termSegmSize) ; /* must have alloc addr */
+	
+	InstallCBuiltinPred("var", 1, PVar) ;
+	InstallCBuiltinPred("nonvar", 1, PNonVar) ;
+	InstallCBuiltinPred("atom", 1, PAtom) ;
+	InstallCBuiltinPred("integer", 1, PPInt) ;
+	InstallCBuiltinPred("float", 1, PPFloat) ;
+	InstallCBuiltinPred("number", 1, PNumber) ;
+	InstallCBuiltinPred("atomic", 1, PAtomic) ;
+
+	InstallCBuiltinPred("functor", 3, PFunctor) ;
+	InstallCBuiltinPred("arg", 3, PArg) ;
+	InstallCBuiltinPred("ins", 4, PIns) ;
+	InstallCBuiltinPred("ins_start", 3, PInsStart) ;
+	InstallCBuiltinPred("ins_end", 3, PInsEnd) ;
+	InstallCBuiltinPred("copy_term", 2, PCopyTerm) ;
+	InstallCBuiltinPred("copy_term", 3, PCopyTermWithEnv) ;
+	InstallCBuiltinPred("free_vars", 2, PFreeVars) ;
+	InstallCBuiltinPred("subterm", 2, PSubTerm) ;
+
+	InstallCBuiltinPred("name", 2, PName) ;
+	InstallCBuiltinPred("atom_codes", 2, PAtomCodes) ;
+	InstallCBuiltinPred("number_codes", 2, PNumberCodes) ;
+//	InstallCBuiltinPred("atom_chars", 2, PAtomChars) ;
+//	InstallCBuiltinPred("number_chars", 2, PNumberChars) ;
+//	InstallCBuiltinPred("char_code", 2, PCharCode) ;
+
+	InstallCBuiltinPred("numbervars", 3, PNumberVars) ;
+	InstallCBuiltinPred("slice", 4, PSlice) ;
+	InstallCBuiltinPred("concat", 2, PConcat) ;
+	InstallCBuiltinPred("===", 2, PConcatRev) ;
+
+	InstallCBuiltinPred("unique", 1, PUnique) ;
+}

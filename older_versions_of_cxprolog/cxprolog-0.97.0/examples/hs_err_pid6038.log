@@ -1,0 +1,266 @@
+#
+# An unexpected error has been detected by Java Runtime Environment:
+#
+#  SIGSEGV (0xb) at pc=0x00000000, pid=6038, tid=3074173840
+#
+# Java VM: Java HotSpot(TM) Client VM (1.6.0_02-b05 mixed mode, sharing)
+# Problematic frame:
+# C  0x00000000
+#
+# If you would like to submit a bug report, please visit:
+#   http://java.sun.com/webapps/bugreport/crash.jsp
+#
+
+---------------  T H R E A D  ---------------
+
+Current thread (0x08142000):  JavaThread "main" [_thread_in_native, id=6039]
+
+siginfo:si_signo=11, si_errno=0, si_code=1, si_addr=0x00000000
+
+Registers:
+EAX=0x00000001, EBX=0x00000000, ECX=0x00000000, EDX=0x0813a550
+ESP=0xb73c1f14, EBP=0x00000001, ESI=0xb73c1f3b, EDI=0xb79e6440
+EIP=0x00000000, CR2=0x00000000, EFLAGS=0x00210246
+
+Top of Stack: (sp=0xb73c1f14)
+0xb73c1f14:   00000000 00000000 00000000 7f1c0300
+0xb73c1f24:   00000000 1a1311ff 00000000 0813a550
+0xb73c1f34:   00000000 65000000 00000015 b7fa3500
+0xb73c1f44:   0000000f 0000000f 00006c02 b79e5ff4
+0xb73c1f54:   b7fc6b00 081290c0 b73c1f78 b78ca5bd
+0xb73c1f64:   00000000 b7fb71db b7fc2bc0 b7fc5aec
+0xb73c1f74:   081290c0 b73c1f98 b7fa3efe b7fc6b00
+0xb73c1f84:   00000001 ff0a0000 00000000 b7fc2bc0 
+
+Instructions: (pc=0x00000000)
+0xfffffff0:   
+
+Stack: [0xb6bc2000,0xb73c3000),  sp=0xb73c1f14,  free space=8191k
+
+---------------  P R O C E S S  ---------------
+
+Java Threads: ( => current thread )
+  0x08176000 JavaThread "Low Memory Detector" daemon [_thread_blocked, id=6045]
+  0x08174800 JavaThread "CompilerThread0" daemon [_thread_blocked, id=6044]
+  0x08173000 JavaThread "Signal Dispatcher" daemon [_thread_blocked, id=6043]
+  0x0816b400 JavaThread "Finalizer" daemon [_thread_blocked, id=6042]
+  0x0816a400 JavaThread "Reference Handler" daemon [_thread_blocked, id=6041]
+=>0x08142000 JavaThread "main" [_thread_in_native, id=6039]
+
+Other Threads:
+  0x08160c00 VMThread [id=6040]
+  0x08177c00 WatcherThread [id=6046]
+
+VM state:not at safepoint (normal execution)
+
+VM Mutex/Monitor currently owned by a thread: None
+
+Heap
+ def new generation   total 960K, used 198K [0x8c050000, 0x8c150000, 0x8c530000)
+  eden space 896K,  22% used [0x8c050000, 0x8c0818b0, 0x8c130000)
+  from space 64K,   0% used [0x8c130000, 0x8c130000, 0x8c140000)
+  to   space 64K,   0% used [0x8c140000, 0x8c140000, 0x8c150000)
+ tenured generation   total 4096K, used 0K [0x8c530000, 0x8c930000, 0x90050000)
+   the space 4096K,   0% used [0x8c530000, 0x8c530000, 0x8c530200, 0x8c930000)
+ compacting perm gen  total 12288K, used 22K [0x90050000, 0x90c50000, 0x94050000)
+   the space 12288K,   0% used [0x90050000, 0x90055890, 0x90055a00, 0x90c50000)
+    ro space 8192K,  73% used [0x94050000, 0x946306f0, 0x94630800, 0x94850000)
+    rw space 12288K,  57% used [0x94850000, 0x94f41d68, 0x94f41e00, 0x95450000)
+
+Dynamic libraries:
+06000000-06417000 r-xp 00000000 08:06 2976738    /media/big/amd2/local/lib/jdk1.6.0_02/jre/lib/i386/client/libjvm.so
+06417000-06430000 rw-p 00417000 08:06 2976738    /media/big/amd2/local/lib/jdk1.6.0_02/jre/lib/i386/client/libjvm.so
+06430000-0684f000 rw-p 06430000 00:00 0 
+08048000-080a7000 r-xp 00000000 08:11 669881     /media/EXTERN/amd1/development/cxprolog-0.97.0/cxprolog
+080a7000-080a9000 rw-p 0005e000 08:11 669881     /media/EXTERN/amd1/development/cxprolog-0.97.0/cxprolog
+080a9000-08233000 rw-p 080a9000 00:00 0          [heap]
+8c050000-8c150000 rwxp 8c050000 00:00 0 
+8c150000-8c530000 rwxp 8c150000 00:00 0 
+8c530000-8c930000 rwxp 8c530000 00:00 0 
+8c930000-90050000 rwxp 8c930000 00:00 0 
+90050000-90c50000 rwxp 90050000 00:00 0 
+90c50000-94050000 rwxp 90c50000 00:00 0 
+94050000-94631000 r--s 00001000 08:06 2976741    /media/big/amd2/local/lib/jdk1.6.0_02/jre/lib/i386/client/classes.jsa
+94631000-94850000 rwxp 94631000 00:00 0 
+94850000-94f42000 rw-p 005e2000 08:06 2976741    /media/big/amd2/local/lib/jdk1.6.0_02/jre/lib/i386/client/classes.jsa
+94f42000-95450000 rwxp 94f42000 00:00 0 
+95450000-95529000 rw-p 00cd4000 08:06 2976741    /media/big/amd2/local/lib/jdk1.6.0_02/jre/lib/i386/client/classes.jsa
+95529000-95850000 rwxp 95529000 00:00 0 
+95850000-95854000 r-xs 00dad000 08:06 2976741    /media/big/amd2/local/lib/jdk1.6.0_02/jre/lib/i386/client/classes.jsa
+95854000-95c50000 rwxp 95854000 00:00 0 
+b473b000-b473c000 ---p b473b000 00:00 0 
+b473c000-b47bc000 rwxp b473c000 00:00 0 
+b47bc000-b47bf000 ---p b47bc000 00:00 0 
+b47bf000-b480d000 rwxp b47bf000 00:00 0 
+b480d000-b4810000 ---p b480d000 00:00 0 
+b4810000-b488e000 rwxp b4810000 00:00 0 
+b488e000-b4891000 ---p b488e000 00:00 0 
+b4891000-b48df000 rwxp b4891000 00:00 0 
+b48df000-b48e2000 ---p b48df000 00:00 0 
+b48e2000-b4930000 rwxp b48e2000 00:00 0 
+b4930000-b4933000 ---p b4930000 00:00 0 
+b4933000-b4981000 rwxp b4933000 00:00 0 
+b4981000-b4982000 ---p b4981000 00:00 0 
+b4982000-b4a10000 rwxp b4982000 00:00 0 
+b4a10000-b4a2a000 rwxp b4a10000 00:00 0 
+b4a2a000-b4a2d000 rwxp b4a2a000 00:00 0 
+b4a2d000-b4a48000 rwxp b4a2d000 00:00 0 
+b4a48000-b4a49000 rwxp b4a48000 00:00 0 
+b4a49000-b4a4a000 rwxp b4a49000 00:00 0 
+b4a4a000-b4a4d000 rwxp b4a4a000 00:00 0 
+b4a4d000-b4a68000 rwxp b4a4d000 00:00 0 
+b4a68000-b4a6e000 rwxp b4a68000 00:00 0 
+b4a6e000-b4a88000 rwxp b4a6e000 00:00 0 
+b4a88000-b4a95000 rwxp b4a88000 00:00 0 
+b4a95000-b4b13000 rwxp b4a95000 00:00 0 
+b4b13000-b4b93000 rwxp b4b13000 00:00 0 
+b4b93000-b6b13000 rwxp b4b93000 00:00 0 
+b6b13000-b6b22000 r-xp 00000000 08:06 2976751    /media/big/amd2/local/lib/jdk1.6.0_02/jre/lib/i386/libzip.so
+b6b22000-b6b24000 rw-p 0000e000 08:06 2976751    /media/big/amd2/local/lib/jdk1.6.0_02/jre/lib/i386/libzip.so
+b6b24000-b6b47000 r-xp 00000000 08:06 2976747    /media/big/amd2/local/lib/jdk1.6.0_02/jre/lib/i386/libjava.so
+b6b47000-b6b49000 rw-p 00023000 08:06 2976747    /media/big/amd2/local/lib/jdk1.6.0_02/jre/lib/i386/libjava.so
+b6b49000-b6b54000 r-xp 00000000 08:06 2976745    /media/big/amd2/local/lib/jdk1.6.0_02/jre/lib/i386/libverify.so
+b6b54000-b6b55000 rw-p 0000b000 08:06 2976745    /media/big/amd2/local/lib/jdk1.6.0_02/jre/lib/i386/libverify.so
+b6b55000-b6b5c000 r-xp 00000000 08:03 243000     /lib/tls/i686/cmov/librt-2.6.1.so
+b6b5c000-b6b5e000 rw-p 00006000 08:03 243000     /lib/tls/i686/cmov/librt-2.6.1.so
+b6b62000-b6b68000 r-xp 00000000 08:06 2976731    /media/big/amd2/local/lib/jdk1.6.0_02/jre/lib/i386/native_threads/libhpi.so
+b6b68000-b6b69000 rw-p 00006000 08:06 2976731    /media/big/amd2/local/lib/jdk1.6.0_02/jre/lib/i386/native_threads/libhpi.so
+b6b69000-b6b6a000 rw-p b6b69000 00:00 0 
+b6b6a000-b6b6b000 r--p b6b6a000 00:00 0 
+b6b70000-b6bc2000 rw-p b6b70000 00:00 0 
+b6bc2000-b6bc5000 ---p b6bc2000 00:00 0 
+b6bc5000-b73c3000 rwxp b6bc5000 00:00 0 
+b73c3000-b73c7000 r-xp 00000000 08:03 66394      /usr/lib/libXfixes.so.3.1.0
+b73c7000-b73c8000 rw-p 00003000 08:03 66394      /usr/lib/libXfixes.so.3.1.0
+b73c8000-b73cf000 r-xp 00000000 08:03 66414      /usr/lib/libXrender.so.1.3.0
+b73cf000-b73d0000 rw-p 00006000 08:03 66414      /usr/lib/libXrender.so.1.3.0
+b73d0000-b73d8000 r-xp 00000000 08:03 66384      /usr/lib/libXcursor.so.1.0.2
+b73d8000-b73d9000 rw-p 00007000 08:03 66384      /usr/lib/libXcursor.so.1.0.2
+b73d9000-b73e2000 r-xp 00000000 08:03 242966     /lib/tls/i686/cmov/libnss_files-2.6.1.so
+b73e2000-b73e4000 rw-p 00008000 08:03 242966     /lib/tls/i686/cmov/libnss_files-2.6.1.so
+b73e4000-b73ec000 r-xp 00000000 08:03 242970     /lib/tls/i686/cmov/libnss_nis-2.6.1.so
+b73ec000-b73ee000 rw-p 00007000 08:03 242970     /lib/tls/i686/cmov/libnss_nis-2.6.1.so
+b73ee000-b7402000 r-xp 00000000 08:03 242957     /lib/tls/i686/cmov/libnsl-2.6.1.so
+b7402000-b7404000 rw-p 00013000 08:03 242957     /lib/tls/i686/cmov/libnsl-2.6.1.so
+b7404000-b7406000 rw-p b7404000 00:00 0 
+b7406000-b740d000 r-xp 00000000 08:03 242962     /lib/tls/i686/cmov/libnss_compat-2.6.1.so
+b740d000-b740f000 rw-p 00006000 08:03 242962     /lib/tls/i686/cmov/libnss_compat-2.6.1.so
+b740f000-b7414000 rwxp b740f000 00:00 0 
+b7414000-b741c000 rw-s 00000000 08:03 379527     /tmp/hsperfdata_amd/6038
+b741c000-b745b000 r--p 00000000 08:03 130573     /usr/lib/locale/en_US.utf8/LC_CTYPE
+b745b000-b745c000 r--p 00000000 08:03 130578     /usr/lib/locale/en_US.utf8/LC_NUMERIC
+b745c000-b745d000 r--p 00000000 08:03 130581     /usr/lib/locale/en_US.utf8/LC_TIME
+b745d000-b753d000 r--p 00000000 08:03 130572     /usr/lib/locale/en_US.utf8/LC_COLLATE
+b753d000-b753e000 r--p 00000000 08:03 130576     /usr/lib/locale/en_US.utf8/LC_MONETARY
+b753e000-b753f000 r--p 00000000 08:03 130582     /usr/lib/locale/en_US.utf8/LC_MESSAGES/SYS_LC_MESSAGES
+b753f000-b7542000 rw-p b753f000 00:00 0 
+b7542000-b7546000 r-xp 00000000 08:03 66388      /usr/lib/libXdmcp.so.6.0.0
+b7546000-b7547000 rw-p 00003000 08:03 66388      /usr/lib/libXdmcp.so.6.0.0
+b7547000-b7549000 r-xp 00000000 08:03 66377      /usr/lib/libXau.so.6.0.0
+b7549000-b754a000 rw-p 00001000 08:03 66377      /usr/lib/libXau.so.6.0.0
+b754a000-b755e000 r-xp 00000000 08:03 67155      /usr/lib/libz.so.1.2.3.3
+b755e000-b755f000 rw-p 00013000 08:03 67155      /usr/lib/libz.so.1.2.3.3
+b755f000-b75b1000 r-xp 00000000 08:03 67097      /usr/lib/libtiff.so.4.2.1
+b75b1000-b75b3000 rw-p 00052000 08:03 67097      /usr/lib/libtiff.so.4.2.1
+b75b3000-b75d2000 r-xp 00000000 08:03 66865      /usr/lib/libjpeg.so.62.0.0
+b75d2000-b75d3000 rw-p 0001e000 08:03 66865      /usr/lib/libjpeg.so.62.0.0
+b75d3000-b75d4000 rw-p b75d3000 00:00 0 
+b75d4000-b75f6000 r-xp 00000000 08:03 68220      /usr/lib/libpng12.so.0.15.0
+b75f6000-b75f7000 rw-p 00021000 08:03 68220      /usr/lib/libpng12.so.0.15.0
+b75f7000-b76e4000 r-xp 00000000 08:03 66371      /usr/lib/libX11.so.6.2.0
+b76e4000-b76e8000 rw-p 000ed000 08:03 66371      /usr/lib/libX11.so.6.2.0
+b76e8000-b76f5000 r-xp 00000000 08:03 66392      /usr/lib/libXext.so.6.4.0
+b76f5000-b76f6000 rw-p 0000d000 08:03 66392      /usr/lib/libXext.so.6.4.0
+b76f6000-b76fd000 r-xp 00000000 08:03 66400      /usr/lib/libXi.so.6.0.0
+b76fd000-b76fe000 rw-p 00006000 08:03 66400      /usr/lib/libXi.so.6.0.0
+b76fe000-b7723000 r-xp 00000000 08:03 72469      /usr/lib/libglib-1.2.so.0.0.10
+b7723000-b7724000 rw-p 00025000 08:03 72469      /usr/lib/libglib-1.2.so.0.0.10
+b7724000-b7726000 r-xp 00000000 08:03 72471      /usr/lib/libgthread-1.2.so.0.0.10
+b7726000-b7727000 rw-p 00001000 08:03 72471      /usr/lib/libgthread-1.2.so.0.0.10
+b7727000-b7728000 rw-p b7727000 00:00 0 
+b7728000-b772a000 r-xp 00000000 08:03 72470      /usr/lib/libgmodule-1.2.so.0.0.10
+b772a000-b772b000 rw-p 00001000 08:03 72470      /usr/lib/libgmodule-1.2.so.0.0.10
+b772b000-b775f000 r-xp 00000000 08:03 72475      /usr/lib/libgdk-1.2.so.0.9.1
+b775f000-b7761000 rw-p 00034000 08:03 72475      /usr/lib/libgdk-1.2.so.0.9.1
+b7761000-b7889000 r-xp 00000000 08:03 72476      /usr/lib/libgtk-1.2.so.0.9.1
+b7889000-b789b000 rw-p 00127000 08:03 72476      /usr/lib/libgtk-1.2.so.0.9.1
+b789b000-b789c000 rw-p b789b000 00:00 0 
+b789c000-b789e000 r-xp 00000000 08:03 242932     /lib/tls/i686/cmov/libdl-2.6.1.so
+b789e000-b78a0000 rw-p 00001000 08:03 242932     /lib/tls/i686/cmov/libdl-2.6.1.so
+b78a0000-b79e4000 r-xp 00000000 08:03 242907     /lib/tls/i686/cmov/libc-2.6.1.so
+b79e4000-b79e5000 r--p 00143000 08:03 242907     /lib/tls/i686/cmov/libc-2.6.1.so
+b79e5000-b79e7000 rw-p 00144000 08:03 242907     /lib/tls/i686/cmov/libc-2.6.1.so
+b79e7000-b79eb000 rw-p b79e7000 00:00 0 
+b79eb000-b79ff000 r-xp 00000000 08:03 242992     /lib/tls/i686/cmov/libpthread-2.6.1.so
+b79ff000-b7a01000 rw-p 00013000 08:03 242992     /lib/tls/i686/cmov/libpthread-2.6.1.so
+b7a01000-b7a03000 rw-p b7a01000 00:00 0 
+b7a03000-b7a0d000 r-xp 00000000 08:03 242947     /lib/libgcc_s.so.1
+b7a0d000-b7a0e000 rw-p 0000a000 08:03 242947     /lib/libgcc_s.so.1
+b7a0e000-b7a31000 r-xp 00000000 08:03 242939     /lib/tls/i686/cmov/libm-2.6.1.so
+b7a31000-b7a33000 rw-p 00023000 08:03 242939     /lib/tls/i686/cmov/libm-2.6.1.so
+b7a33000-b7b1b000 r-xp 00000000 08:03 67085      /usr/lib/libstdc++.so.6.0.9
+b7b1b000-b7b1e000 r--p 000e8000 08:03 67085      /usr/lib/libstdc++.so.6.0.9
+b7b1e000-b7b20000 rw-p 000eb000 08:03 67085      /usr/lib/libstdc++.so.6.0.9
+b7b20000-b7b26000 rw-p b7b20000 00:00 0 
+b7b26000-b7f1b000 r-xp 00000000 08:03 65023      /usr/lib/libwx_gtk-2.4.so.1.0.0
+b7f1b000-b7f45000 rw-p 003f5000 08:03 65023      /usr/lib/libwx_gtk-2.4.so.1.0.0
+b7f45000-b7f52000 rw-p b7f45000 00:00 0 
+b7f52000-b7f8e000 r-xp 00000000 08:03 242959     /lib/libncurses.so.5.6
+b7f8e000-b7f96000 rw-p 0003b000 08:03 242959     /lib/libncurses.so.5.6
+b7f96000-b7fc2000 r-xp 00000000 08:03 242999     /lib/libreadline.so.5.2
+b7fc2000-b7fc6000 rw-p 0002c000 08:03 242999     /lib/libreadline.so.5.2
+b7fc6000-b7fc7000 rw-p b7fc6000 00:00 0 
+b7fc7000-b7fc8000 r--p 00000000 08:03 130579     /usr/lib/locale/en_US.utf8/LC_PAPER
+b7fc8000-b7fc9000 r--p 00000000 08:03 130577     /usr/lib/locale/en_US.utf8/LC_NAME
+b7fc9000-b7fca000 r--p 00000000 08:03 130571     /usr/lib/locale/en_US.utf8/LC_ADDRESS
+b7fca000-b7fcb000 r--p 00000000 08:03 130580     /usr/lib/locale/en_US.utf8/LC_TELEPHONE
+b7fcb000-b7fcc000 r--p 00000000 08:03 130575     /usr/lib/locale/en_US.utf8/LC_MEASUREMENT
+b7fcc000-b7fd3000 r--s 00000000 08:03 64904      /usr/lib/gconv/gconv-modules.cache
+b7fd3000-b7fd4000 r--p 00000000 08:03 130574     /usr/lib/locale/en_US.utf8/LC_IDENTIFICATION
+b7fd4000-b7fd6000 rw-p b7fd4000 00:00 0 
+b7fd6000-b7ff0000 r-xp 00000000 08:03 250868     /lib/ld-2.6.1.so
+b7ff0000-b7ff2000 rw-p 00019000 08:03 250868     /lib/ld-2.6.1.so
+bfbe4000-bfbf9000 rwxp bfbe4000 00:00 0          [stack]
+ffffe000-fffff000 r-xp 00000000 00:00 0          [vdso]
+
+VM Arguments:
+java_command: <unknown>
+Launcher Type: generic
+
+Environment Variables:
+CLASSPATH=.:/home/amd/.cxprolog/cache/:/usr/local/share/cxprolog/lib/cxprolog
+PATH=.:/home/amd/commands:/usr/local/bin:/bin:/usr/bin:/sbin:/usr/sbin:/usr/X11R6/bin:/usr/lib/j2/bin:/usr/local/javacc-3.2/bin:/usr/local/eclipse:/usr/local/apache-ant-1.6.2/bin:/usr/local/godi/bin:/usr/local/godi/sbin:/usr/local/logtalk/xml:/usr/local/logtalk/scripts
+USERNAME=amd
+SHELL=/bin/bash
+DISPLAY=:0.0
+
+Signal Handlers:
+SIGSEGV: [libjvm.so+0x3b2720], sa_mask[0]=0x7ffbfeff, sa_flags=0x10000004
+SIGBUS: [libjvm.so+0x3b2720], sa_mask[0]=0x7ffbfeff, sa_flags=0x10000004
+SIGFPE: [libjvm.so+0x309d50], sa_mask[0]=0x7ffbfeff, sa_flags=0x10000004
+SIGPIPE: [libjvm.so+0x309d50], sa_mask[0]=0x7ffbfeff, sa_flags=0x10000004
+SIGILL: [libjvm.so+0x309d50], sa_mask[0]=0x7ffbfeff, sa_flags=0x10000004
+SIGUSR1: SIG_DFL, sa_mask[0]=0x00000000, sa_flags=0x00000000
+SIGUSR2: [libjvm.so+0x30bd80], sa_mask[0]=0x00000000, sa_flags=0x10000004
+SIGHUP: [libjvm.so+0x30b7a0], sa_mask[0]=0x7ffbfeff, sa_flags=0x10000004
+SIGINT: SIG_IGN, sa_mask[0]=0x00000002, sa_flags=0x10000000
+SIGQUIT: [libreadline.so.5+0x1ed60], sa_mask[0]=0x00000000, sa_flags=0x00000000
+SIGTERM: [libreadline.so.5+0x1ed60], sa_mask[0]=0x00000000, sa_flags=0x00000000
+SIGUSR2: [libjvm.so+0x30bd80], sa_mask[0]=0x00000000, sa_flags=0x10000004
+
+
+---------------  S Y S T E M  ---------------
+
+OS:lenny/sid
+
+uname:Linux 2.6.22-14-generic #1 SMP Tue Dec 18 08:02:57 UTC 2007 i686
+libc:glibc 2.6.1 NPTL 2.6.1 
+rlimit: STACK 8192k, CORE 0k, NPROC 8180, NOFILE 1024, AS infinity
+load average:0.24 0.25 0.31
+
+CPU:total 1 (1 cores per cpu, 1 threads per core) family 6 model 13 stepping 8, cmov, cx8, fxsr, mmx, sse, sse2
+
+Memory: 4k page, physical 1034228k(115080k free), swap 262136k(101052k free)
+
+vm_info: Java HotSpot(TM) Client VM (1.6.0_02-b05) for linux-x86, built on Jun 14 2007 16:05:18 by "java_re" with gcc 3.2.1-7a (J2SE release)
+

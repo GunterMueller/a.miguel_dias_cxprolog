@@ -1,0 +1,115 @@
+/*
+ *   This file is part of the NanoProlog system
+
+ *   README_NET
+ *   by A.Miguel Dias - 97/08/057
+ *   GLOC - Grupo de Logica Computacional
+ *   Dept. de Informatica, FCT, Universidade Nova de Lisboa.
+ *   Copyright (C) 1997 A.Miguel Dias, GLOC, DI/FCT/UNL
+
+ *   NanoProlog is free software; you can redistribute it and/or modify
+ *   it under the terms of the GNU General Public License as published by
+ *   the Free Software Foundation; either version 1, or (at your option)
+ *   any later version.
+
+ *   NanoProlog is distributed in the hope that it will be useful,
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *   GNU General Public License for more details.
+
+ *   You should have received a copy of the GNU General Public License
+ *   along with NanoProlog; see the file COPYING.  If not, write to
+ *   the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+
+/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
+
+NanoProlog version 0.55 (net)
+
+This document describes some new experimental predicates for ...
+
+- launching one UNIX application concurrently and controlling it from within the
+  Prolog process;
+
+- creating one internet socket and replying to requests received by that socket;
+
+- string manipulation.
+
+/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
+
+xappl_package: (only in UNIX)
+~~~~~~~~~~~~~~
+This package allows a *single* application to be launched concurrently with the
+Prolog process. That application is then controllable via its input/output
+channels. Using this package, any Prolog program may access the services of
+any chosen application. In what follows 'xappl' represents the concurrent
+application.
+
+xappl_launch(+PathName)
+Launches the xappl PathName as a parallel process and sets the current 'prompt'
+and the 'time-out' settings to '\n' and 2 seconds respectively. Failure
+indicates that the xappl has not been launched (possibly due to an invalid
+pathname). Example: x_launch('/usr/bin/bc').
+
+xappl_send(+Text)
+Send Text to the xappl. Usually the message will be finished with a new line
+character. Example: x_send("2^1000\n").
+
+xappl_receive(-Text, +Prompt, +Timeout)
+Receives Text from the xappl. Prompt is the prompt of the application: the
+predicate needs to know the prompt of the application as it indicates 'end
+of transmission'. x_receive/2 makes the Prolog wait until the xappl
+replies. If this does not happen within the time frame indicated by
+Timeout (range:1 to 60 seconds) the empty string "" is returned.
+Note that Text="" will always mean that time-out has occurred.
+Example: x_receive(X, 'SQL> ').
+
+xappl_receive(-Text)
+Similar to x_receive/2, only the current 'prompt' and 'time-out' settings
+are used. Example: x_receive(X).
+
+xappl_close
+Closes the channel linking the Prolog compiler to the xappl; this is perceived by
+the xappl as end_of_file. So in most contexts x_close/0 will make the xappl
+terminate normally. Sending an 'exit' command to the xappl using the predicate
+x_send/1 also would terminate the xappl but the internal data structures of
+NanoProlog would not be updated. So do always terminate the xappl with x_close/0.
+
+xappl_set_prompt(+Prompt)
+Sets the current 'prompt' setting to Prompt. Example: x_set_prompt('SQL> ')
+
+xappl_set_timeout(+Timeout)
+Sets the current 'time-out' setting to Timeout (range: 1 to 60 seconds).
+Example: x_set_timeout(5).
+
+/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
+
+ysocket_package: (only in UNIX)
+~~~~~~~~~~~~~~~~
+This package allows a *single* TCP/IP socket to be created so that the Prolog
+process could be used as a "server". The Prolog process listens to the socket
+and gets requests from other processes.
+
+ysocket_install(+PortNumber)
+Create a socket bound to PortNumber. The socket once created cannot be deleted
+(at least while the Prolog process is running.)
+
+ysocket_get(-Text)
+Get the next request available in the socket. The request is assumed to be a
+simple line of text.
+
+ysocket_reply(+Text)
+Reply to the request. The request may be any amount of text.
+
+(NanoCGI.c is one example of a client)
+/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
+
+Strings_package:
+~~~~~~~~~~~~~~~~
+str_read(-Text)
+Reads a Prolog string.
+
+str_write(+Text)
+Writes a Prolog string.
+
+/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/

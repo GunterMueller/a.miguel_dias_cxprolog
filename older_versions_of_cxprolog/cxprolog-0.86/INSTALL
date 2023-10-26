@@ -1,0 +1,33 @@
+CXPROLOG INSTALLATION PROCEDURE
+===============================
+
+Installation of the source distribution
+----------------------------------------
+
+This builds the executable "cxprolog":
+
+    cd src
+    make
+
+This checks if "cxprolog" operates correctly on your machine:
+
+    make test
+
+This installs "cxprolog" in "/usr/local/bin/" (may require 
+superuser privileges):
+
+    make install
+
+If you prefer to install "cxprolog" elsewhere, e.g. inside
+"/usr/bin/", then you must change the PREFIX definition in file
+"Makefile" before running "make install".
+
+This removes all the "mess" created by the compiler:
+
+    make clean
+
+
+Enjoy using cxprolog.
+
+
+                           - * - * - * - * -

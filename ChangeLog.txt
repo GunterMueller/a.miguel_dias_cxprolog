@@ -15,6 +15,72 @@
 
 *** CHANGELOG ***
 
+30/Aug/2022: version 0.98.4 (development)
+  -semantic changes:
+      * None, as for now.
+  -additions:
+      * None, as for now.
+  -improvements:
+      * Better compatibility with MacOS.
+      * The character encoding of the file Changelog.txt has changed from
+        Latin-1 (ISO-8859-1) to UTF-8.
+  -bug fixes:
+      * The predicate absolute_file_name/2 was behaving badly in a specific
+        circumstance: when one of the items of the path had a length above 15.
+        Fixed. [Ant贸nio Porto reported the bug.]
+      * Fixed a subtle bug on the unification algorithm of circular terms
+        [Ant贸nio Porto identified and delimited the bug.] {macro Cyclic2_PrepareArgs}
+      * Still, one more kind of of autoreference causing problems in the algorithms that
+        deal with infinite terms. Fixed. [Ant贸nio Porto reported the bug.]
+        {   p(1*2+3) :- true.    % bug example
+            t(c(X,X)) :- p(X).
+            :- t(X), '$term_internals'(X).        }
+      * The 32-bit version was crashing. Fixed. {typedef Size}
+      * Wrong behaviour when calling read_term/2 or read_term/3 using the option
+        variable_names/1. The argument of the option does not become bound to the empty list.
+        Fixed. [Paulo Moura reported the bug.]
+
+22/Dec/2019: version 0.98.3
+  -semantic changes:
+      * When the new flat 'iso' is active, the evaluation of aritmetic
+        expressions tries to follow strictly the ISO Prolog. Therefore, there will be less
+        automatic conversions from float to integer. Examples: the result
+        of 1+1 is still the integer 2, but the result of 1.5+1.5 is now
+        the real 3.0 and not anymore the integer 3. This change is
+        problematic only for programs that use the predicates integer/1
+        ou float/1 to check the type of the result returned by an
+        arithmetic evaluation.   
+      * The aritmetic function random/1 now returns random values inside the
+        open interval ]0.0, 1.0[. The previous interval was closed at the left
+        allowing a zero result that causes trouble in divisions.
+  -additions:
+      * New predicate '$term_internals'/1 shows the low level representation
+        of a term. Useful for instructive purposes and for debugging.
+      * New predicate flags/1 allows saving the current state of all the flags
+        to restore later. Used in the file pl/test_all.pl.
+      * New flag 'arithmetic_checking', controls the consequences of arguments
+        outside the domain of each aritmetic functions. There are two
+        alternatives: to raise an exception (the new default) or to return
+        an IEEE 754 special float: +inf, -inf, nan (the old behaviour).
+      * New flag 'iso' activates some polemic ISO compatibility that goes
+        against the default CxProlog behaviour.
+  -improvements:
+      * The locales ending in ".iso885915" were added to the set of locales
+        that is handled internally (insted of via the standard library).
+        Furthermore, some details where improved regarding handling locales
+        via the standard library.
+  -bug fixes:
+      * There was missing the trivial aritmetic function +/1.
+      * The WAM builds each Prolog DAG term in such a way that each
+        common part of a DAG becomes indirectly shared via a logic variable.
+        However, when a DAG is copied to an imperative variable, the term is
+        optimized and the auxiliary logic variables are discarded - the DAG
+        is now represented using direct autoreferences. These direct
+        autoreferences was causing trouble in the algorithms that deal
+        with infinite terms. These algorithms were fixed.
+      * Fixed some problems when switching on and off the mode 'detailed' of
+        the Prolog flag 'sys_trace'.
+
 18/Sep/2016: version 0.98.2
   -semantic changes:
       * None
@@ -36,8 +102,8 @@
         can also be used from the C and Java sides. This is used in
         the CxProlog IDE for Eclipse
   -bug fixes:
-      * Old and subtle bug lurking in the predicate retract/1,
-        randomly occurring at the automatic stacks sifts. Fixed.
+      * Old and subtle bug lurking in the predicate retract/1.
+        Bug randomly occurring at the automatic stacks shifts. Fixed.
         [Paulo Moura led to the discovery of this bug.]
 
 20/Mar/2016: version 0.98.1
@@ -96,10 +162,10 @@
       * A dot appearing after some digits was always interpreted as a decimal
         point. Fixed. Now the reader is more clever and reads terms such as
         1.a, which should be interpreted as [1|a].
-        [Ant髇io Porto reported the bug.]
+        [Ant贸nio Porto reported the bug.]
       * A previous fix of a bug in the predicates ins/4, ins_start/3 and
         ins_end/3 has introduced a new bug. Fixed, at last, we hope.
-        [Ant髇io Porto reported this bug.]
+        [Ant贸nio Porto reported this bug.]
       * Fixed some bugs involving rare forms of accessing elements
         of extra-type.
 
@@ -132,7 +198,7 @@
         Furthermore, the particular symbol sequence beginning "!." is
         handled in a special way and '!' is still seen as a solo character
         in this particular context. The flag is on by default.
-        [Ant髇io Porto request.]
+        [Ant贸nio Porto request.]
       * Added the non-ISO but traditional Prolog predicate soft cut *->/2.
         Implementation not optimized yet. [Paulo Moura request.]
   -improvements:
@@ -147,7 +213,7 @@
         available. No need anymore to supply a special argument when building
         the application using the 'make' command.
       * The call 'write((p,o))' produced '(p),o'. Now it writes 'p,o' because
-        the term 'p,o' can be read back without any problem. [Ant髇io Porto
+        the term 'p,o' can be read back without any problem. [Ant贸nio Porto
         request.]
   -bug fixes:
       * Active Edinburgh streams could be incorrectly garbage collected. Fixed.
@@ -172,9 +238,9 @@
         bug when using the predicate numbervars/3 in a particular context.]
       * With the flag 'nil_is_special' on, the term reader was still
         accepting the term [] as an atom in some wrong contexts (e.g. "[](9)"),
-        causing crashes. Fixed. [Ant髇io Porto reported the bug.]
+        causing crashes. Fixed. [Ant贸nio Porto reported the bug.]
       * Solved some issues with the prompt when using an alternative
-        top-level command-line interface. [Ant髇io Porto reported the bug.]
+        top-level command-line interface. [Ant贸nio Porto reported the bug.]
       * The predicate absolute_file_name/2 was ignoring the  prolog flag
         'file_name_variables'. Fixed. Now that the automatic filename expansion
         is applied when the prolog flag 'file_name_variables' is on.
@@ -184,11 +250,11 @@
       * Subtle bug in the predicates ins/4, ins_start/3 and ins_end/3. In some
         rare circumstances, a reference to a local variable was placed in the
         global stack, violating an invariant of the abstract machine. Fixed.
-        [Ant髇io Porto reported this bug.]
+        [Ant贸nio Porto reported this bug.]
       * The predicates array_set/3 and dict_set/3 now accept free vars as
         last argument. Some useful uses of the predicates require this. Besides,
         this is necessary to achieve consistency with the ivars, stacks and
-        queues. [Ant髇io Porto reported the problem.]
+        queues. [Ant贸nio Porto reported the problem.]
       * Subtle bug in the predicate sub_atom/5. Fixed. [Paulo Moura
         reported the bug.]
 
@@ -203,7 +269,7 @@
         Using this semantics, [] == '[]' fails like 1 == '1'.
         This is read-only flag can be setup at startup using the command
         "cxprolog --flags nil_is_special=true". The flag is off by default.
-        [This new behavior was an idea and a request by Ant髇io Porto.]
+        [This new behavior was an idea and a request by Ant贸nio Porto.]
       * [Windows] Introduced supports for the "shebang #!" line in scripts,
         emulating the Unix versions. 
       * Added the Prolog flag 'dialect' plus the arithmetic constant 'epsilon'.
@@ -229,7 +295,7 @@
         on systems where va_start allocates memory. This was never a
         problem on Linux, Mac OS or Windows running on conventional
         Intel/AMD hardware.
-      * Fixed an oversight in the term writer. [Discovered by Ant髇io Porto.]
+      * Fixed an oversight in the term writer. [Discovered by Ant贸nio Porto.]
         For example, write(+ (x,y)), produced "+(x,y)" instead of "+ (x,y)",
         which are distinct structures. The space separator is necessary.
         This happened with all prefix operators made of symbols.
@@ -244,7 +310,7 @@
         full and this could cause a crash. Now ZPushCompoundTerm leaves
         a memory reserve at the top of the local stack. This bug was created
         in version 0.96, with the introduction of cyclic terms.
-        [Crash discovered by Nuno Soares e Ricardo Amador.]
+        [Crash discovered by Nuno Soares and Ricardo Amador.]
 
 29/Nov/2009: version 0.97.4
   -semantic changes:
@@ -283,7 +349,7 @@
         encodings like UTF-8 or UTF-16. As a matter of fact, this was the
         last place in the code where the internal support for common
         character encodings was still not in use. [Hopefully the non
-        reproducible glitch that Ant髇io Porto once noticed never
+        reproducible glitch that Ant贸nio Porto once noticed never
         happens again.]
   -bug fixes:
       * The C library function "stat" seems to be buggy in MinGW and
@@ -292,7 +358,7 @@
       * In some situations, the term writer failed to insert one
         space between consecutive atoms made of symbols. For
         example, "writeq(a>(=(1,2,3,4)))" produced "a>=(1,2,3,4)";
-        now it produces "a> =(1,2,3,4)". [Thanks to Ant髇io Porto for
+        now it produces "a> =(1,2,3,4)". [Thanks to Ant贸nio Porto for
         the bug report.]
       * [Windows] The interrupt (Cntr-C) is active again. By mistake, I
         disabled it in the previous version.

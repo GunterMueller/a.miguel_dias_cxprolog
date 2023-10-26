@@ -1,0 +1,7 @@
+% Just to test NanoProlog
+
+:- [zbm].
+:- ['zstr_io.pl', 'ztokens.pl', 'zutils'].
+
+:- bm,bm.
+:- str_read("a(X,[we,45,D])",Z), writeln(Z).

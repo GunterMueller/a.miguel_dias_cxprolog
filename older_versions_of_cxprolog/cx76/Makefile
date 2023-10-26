@@ -1,0 +1,40 @@
+NAMES = Arith Atom Clause Clock CodeGen Compiler CxProlog			\
+		Debug Dictionary FileSys Flags HashTable ImperativeVar Index\
+		ListCode Machine Memory Mesg  Operator Predicate Queue Stack\
+		Stream Term TermChars TermRead TermWrite Thread Unify Unit	\
+		UnixServices Util VarDictionary YourExtensions
+
+OBJ_DIR = obj
+
+define OBJS
+    $(addprefix $(OBJ_DIR)/, $(addsuffix .o, $(foreach file, $(NAMES), \
+	$(file))))
+endef
+
+APP=cxprolog
+NICK=cx
+VERSION=76
+
+CC = gcc 
+CFLAGS = -O
+
+$(APP): $(OBJ_DIR) $(OBJS)
+	$(CC) $(CFLAGS) -o $(APP) $(OBJS) -lm
+
+$(OBJ_DIR)/%.o: %.c
+	$(CC) $(CFLAGS) $(DEFINES) -c $< -o $@
+
+$(OBJ_DIR):
+	mkdir obj
+
+clear:
+	rm -rf obj
+	rm -f core
+	rm -f cxprolog
+	rm -f CxP
+	rm -f cxprolog.make
+
+pack:
+	cd .. ;				\
+	tar cv $(NICK)$(VERSION) > $(APP).$(VERSION).tar ; \
+	gzip $(APP).$(VERSION).tar
