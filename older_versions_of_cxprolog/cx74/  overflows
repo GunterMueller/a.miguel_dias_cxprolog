@@ -1,0 +1,10 @@
+		CheckGlobalStackOverflow() ;
+			if( CodeOverflow() ) return nil ;
+		CheckLocalStackOverflow() ; }
+			if( nRecs >= nRecsMax ) Error("Clause too big") ;
+
+
+
+		Error("Too many variables in term") ;
+		Error("Too many files open, openning '%s'", name) ;
+		Error("Too many variables in clause") ;

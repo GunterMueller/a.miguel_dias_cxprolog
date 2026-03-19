@@ -1,0 +1,72 @@
+
+CXPROLOG INSTALLATION PROCEDURE FOR LINUX & MAC OS X
+====================================================
+
+The installation is made using the source distribution.
+
+
+* BUILDING
+
+The following command builds a bare bones executable CxProlog, with
+no optional components activated:
+
+    make
+
+
+
+* ACTIVATING OPTIONAL COMPONENTS
+
+To activate optional components during the building process, you need
+to supply extra arguments to the "make" command. Aa now the available
+options are:
+
+	USE_READLINE=y	
+		Adds support for command-line editing and command line history,
+        using the GNU readline library.
+
+	USE_JAVA=y
+		Adds a JNI-based external interface for Java.
+
+	USE_WXWIDGETS=y
+		Adds an external interface for the wxWidgets  platform independent API.
+		
+To activate everything at the same time, the full command is:
+
+	make USE_READLINE=y USE_JAVA=y USE_WXWIDGETS=y
+
+
+
+* CLEANING
+
+This removes all the mess created by the compiler:
+
+    make clean
+
+
+
+* TESTING
+
+The following command checks if CxProlog" operates correctly on your machine:
+
+    make test
+
+
+
+* INSTALLING
+
+The following command installs the CxProlog files in the default directory
+"/usr/local" (this may require  superuser privileges):
+
+    make install
+
+To install in a different directory, e.g. "/usr/bin", use the PREFIX option
+as in:
+
+    make install PREFIX=/usr
+
+
+
+Enjoy using CxProlog.
+
+amd@di.fct.unl.pt
+                           - * - * - * - * -

@@ -1,0 +1,32 @@
+
+
+[main] ?- writeln(['[]',[]]).
+[[],[]]
+yes
+
+[main] ?- writeqln(['[]',[]]).
+['[]',[]]
+yes
+
+[main] ?- [] =.. X.
+X = [[]] ? 
+yes
+
+[main] ?- [] = '[]'.
+no
+
+[main] ?- atom('[]').
+yes
+
+[main] ?- atom([]).
+no
+
+[main] ?- [user].
+|: hello.
+|: % File user consulted, 0 sec 832 bytes
+yes
+
+[main] ?- [].
+yes
+
+

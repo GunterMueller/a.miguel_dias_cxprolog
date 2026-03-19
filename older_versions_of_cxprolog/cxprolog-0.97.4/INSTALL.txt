@@ -1,0 +1,119 @@
+
+=============================================
+   CXPROLOG INSTALLATION FROM SOURCE CODE
+
+ APPLIES TO LINUX, MAC OS X & WINDOWS(MINGW)
+=============================================
+
+
+
+* BUILDING THE APPLICATION
+
+The following command builds the executable CxProlog, with
+all the optional components disabled:
+
+    make
+
+ - Generated in LINUX, MAC OS X => cxprolog
+ - Generated in WINDOWS(MINGW)  => cxprolog.exe
+
+
+
+* BUILDING THE DYNAMIC LIBRARY
+
+The following command builds the CxProlog dynamic library, with
+all the optional components disabled:
+
+    make lib
+
+ - Generated in LINUX, MAC OS X => libcxprolog.so
+ - Generated in WINDOWS(MINGW)  => libcxprolog.a, cxprolog.dll
+
+
+
+* ACTIVATING OPTIONAL COMPONENTS
+
+To activate optional components, in the application or in the
+dynamic library, you supply extra arguments to the "make" command.
+The available options are the following:
+
+	READLINE=y	
+		Adds support for command-line editing and command line history,
+        using the GNU readline library.
+
+	JAVA=y
+		Adds a JNI-based external interface for Java.
+
+	WXWIDGETS=y
+		Adds an external interface for the wxWidgets  platform independent API.
+		
+To activate the three options at the same time, you use one of these:
+
+	make READLINE=y JAVA=y WXWIDGETS=y
+	make READLINE=y JAVA=y WXWIDGETS=y lib
+
+
+
+* FULL BUILD
+
+The following command builds the application and the dynamic library
+at the same time, with the three optional components activated:
+
+    make full
+
+
+
+* CLEANING
+
+This removes all the mess created by the compiler, including the application
+and the dynamic library:
+
+    make clean
+
+
+
+* TESTING
+
+The following command checks if CxProlog" operates correctly on your machine:
+
+    make test
+
+
+
+* INSTALLING
+
+The following command installs the CxProlog files in the default directory
+"/usr/local" (this may require  superuser privileges):
+
+    make install
+
+To install in a different directory, e.g. "/usr/bin", use the PREFIX option
+as in:
+
+    make install PREFIX=/usr
+
+
+
+Enjoy using CxProlog.
+
+amd@di.fct.unl.pt
+                           - * - * - * - * -
+
+
+
+======================================
+   MINGW INSTALLATION ON WINDOWS OS
+======================================
+
+MinGW (Minimalist GNU for Windows), is a native software port of GCC to
+Microsoft Windows, along with a set of import libraries and header files for
+the Windows API.
+
+MinGW allows the creation of native Windows applications. MinGW does not
+require a compatibility layer DLL. MinGW, always uses direct Win32-API calls.
+
+The latest version of MinGW is always available here:
+
+    http://www.tdragon.net/recentgcc/
+
+More installation details later...

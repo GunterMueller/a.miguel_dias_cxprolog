@@ -1,0 +1,45 @@
+
+CXPROLOG INSTALLATION PROCEDURE FOR WINDOWS
+===========================================
+
+
+
+* INSTALLING
+
+Simply expand the supplied archived application folder anywhere you want
+and CxProlog is ready to use.
+
+Please do not mess with the relative positions of the files inside the
+application folder because those positions are important for some features
+of CxProlog to work, like accessing libraries or using the Java interface.
+
+
+
+* CUSTOMIZE THE CONSOLE
+
+You need to customize the console where CxProlog runs to properly display
+non-ansi characters (e.g. accented characters). Simply select the font
+helvetica in the Properties menu of the console.
+
+
+
+* PREPARE FOR JAVA
+
+For the Java interface to work, you have to install jdk-1.5.0, or a newer
+version, and you need to setup the PATH environment variable to make the
+command 'javac' and the library 'jvm.dll' accessible. Please don't move files
+around; change only the PATH variable by extending it with something like
+this:
+
+"C:\Program Files\Java\jdk1.5.0\bin;C:\Program Files\Java\jdk1.5.0\jre\bin\client"
+
+CxProlog does not initialize the Java interface at startup. CxProlog initializes
+the Java interface when a Java predicate is called for the first time. To check
+if the Java interface is working OK you can use the predicate "java_check/0".
+
+
+
+Enjoy using CxProlog.
+
+amd@di.fct.unl.pt
+                           - * - * - * - * -

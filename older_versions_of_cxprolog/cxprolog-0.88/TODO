@@ -1,0 +1,64 @@
+
+accessing time and date
+atom_term_tokens/2
+
+filesys DONE
+more flexible i/o DONE
+more flexible read/write, choosing channel DONE
+tuples? -> ins/4 DONE
+elastic buffers DONE
+compile contexts
+fix operators DONE
+debugger DONE
+fast assertz DONE
+optimization
+garbage collection for terms
+garbage collector for clauses
+remove 'texts' and replace then by a garbage collector of atoms DONE
+recursivity elimination DONE
+Introduce a Float hash table DONE
+no_strings flag.
+C calling Prolog DONE
+break/0
+
+
+contexts DONE
+finalizers DONE
+[list] >> t
+free_vars DONE
+
+make buffer reentrant because of subterm
+
+dynamic predicates with well defined semantics
+type-mode declarations
+unicode support
+buffers DONE
+load prolog code from C-String
+
+
+Sensitive parts:
+   index building
+   garbage collector of temporary atoms
+   rellocation of global and local stacks
+   debugger
+
+Bad Overflows:
+    buffer:  X = f(X,X).
+    local stack: a:-a. a:-a. a.
+
+        CheckGlobalStackOverflow() ;
+            if( CodeOverflow() ) return nil ;
+        CheckLocalStackOverflow() ; }
+            if( nRecs >= nRecsMax ) Error("Clause too big") ;
+
+        Error("Too many variables in term") ;
+        Error("Too many files open, opening '%s'", name) ;
+        Error("Too many variables in clause") ;
+
+
+Introduce dynamic anonymous units. A dynamic anonymous
+	     unit is represented by a list of clauses and may be
+		 used wherever a unit descriptor is expected. All the clauses
+		 in a dynamic anonymous unit are implicitly visible.
+		 Example:  [(a:-b), (b:-writeln(b)) | X] >> a 
+

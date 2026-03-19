@@ -1,0 +1,337 @@
+/*
+ *   This file is part of the CxProlog system
+
+ *   InterLine.c
+ *   by A.Miguel Dias - 2007/09/01
+ *   CITI - Centro de Informatica e Tecnologias da Informacao
+ *   Dept. de Informatica, FCT, Universidade Nova de Lisboa.
+ *   Copyright (C) 1990-2010 A.Miguel Dias, CITI, DI/FCT/UNL
+
+ *   CxProlog is free software; you can redistribute it and/or modify
+ *   it under the terms of the GNU General Public License as published by
+ *   the Free Software Foundation; either version 2 of the License, or
+ *   (at your option) any later version.
+
+ *   CxProlog is distributed in the hope that it will be useful,
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ *   GNU General Public License for more details.
+
+ *   You should have received a copy of the GNU General Public License
+ *   along with this program; if not, write to the Free Software
+ *   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ */
+
+#include "CxProlog.h"
+
+#define supressPrompts		0
+
+Bool interactiveSession ;
+
+
+/* PROMPTS */
+
+#define AtTopLevelRead()		(topLinePrompt != nil)
+
+static Bool interLineActive = false ;
+static Str linePrompt, topMainPrompt, topLinePrompt ;
+
+static Str InterLineGetLinePrompt(void)
+{
+    return linePrompt == nil ? "|: " : linePrompt ;
+}
+
+static Str InterLineGetPrompt(void)
+{
+	if( !InteractiveSession() )
+		return "" ;
+	elif( linePrompt != nil )
+		return InterLineGetLinePrompt() ;
+	elif( topMainPrompt != nil ) {
+		Str prompt = topMainPrompt ;
+		topMainPrompt = nil ;
+		return prompt ;
+	}
+	elif( topLinePrompt != nil )
+		return topLinePrompt ;
+	else
+		return InterLineGetLinePrompt() ;
+}
+
+void InterLineBeginTop(Str main, Str line) {
+	topMainPrompt = main != nil ? main : "" ;
+	topLinePrompt = line != nil ? line : "" ;
+}
+
+void InterLineEndTop() {
+	topMainPrompt = nil ;
+	topLinePrompt = nil ;
+}
+
+static void InterLineBeginLinePrompt(Str prompt)
+{
+    linePrompt = prompt != nil ? prompt : "" ;
+}
+
+static void InterLineEndLinePrompt(void)
+{
+    linePrompt = nil ;
+}
+
+static void InterLinePromptInit()
+{
+	interLineActive = true ;
+	InterLineEndTop() ;
+	InterLineEndLinePrompt() ;
+}
+
+
+/* INTERACTIVE COMMAND LINE */
+
+#if OS_UNIX && USE_READLINE
+#include <readline/readline.h>
+#include <readline/history.h>
+
+#if RL_READLINE_VERSION < 0x400
+#	error "Required library: readline-4.0 or newer."
+#endif
+
+static CharPt line, linePt ;
+
+static void r(void)
+{
+	line = readline(InterLineGetPrompt()) ;
+}
+
+static Bool InterLineMore(void)
+{
+	/* Not sure if locale should be changed. @@@ */
+	RunProtected(r) ;
+	if( line == nil )
+		return false ;	/* EOF */
+	linePt = AtTopLevelRead() ? ClearTermText(line, false) : line ;
+	if( linePt[0] == '\0' || linePt[1] == '\0' || (linePt[2] == '\0' && linePt[1] != '.') )
+		/* Does not insert in history */ ;
+	else {
+		Bool isRepetition = history_length > 0
+					&& strcmp(linePt, history_get(history_length)->line) == 0 ;
+		if( !isRepetition )
+			add_history(linePt) ;
+	}
+	return true ;
+}
+
+void InterLineChangedUserStreams()
+{
+	rl_instream = StreamFILE(userIn) ;
+	rl_outstream = StreamFILE(userOut) ;
+}
+
+static void InterLineReinitialize(void)
+{
+	if( line != nil )
+		free(line) ;
+	line = nil ;
+}
+
+void InterLineFinish(void)
+{
+	if( interLineActive )		/* Save history for next session */
+		write_history(WithPreferencesDirPath("history", nil)) ;
+}
+
+static void InterLineInitialize(void)
+{
+	line = nil ;
+	InterLineReinitialize() ;
+	rl_readline_name = "cxprolog" ;		/* For cond. parsing of "~/.inputrc". */
+	rl_inhibit_completion = 1 ;			/* Disable completion */
+	using_history() ;					/* Initialize history */
+										/* Load history from prev. session */
+	read_history(WithPreferencesDirPath("history", nil)) ;
+}
+
+WChar InterLineGet()
+{		
+	if( line == nil && !InterLineMore() )
+		return EOF ;
+	else {
+		WChar c = StrGetChar(&linePt, SystemEncoding()) ;
+		if( c == '\0') {
+			InterLineReinitialize() ;
+			return '\n' ;
+		}
+		else
+			return c ;
+	}
+}
+
+WChar InterLinePeek()
+{
+	if( line == nil && !InterLineMore() )
+		return EOF ;
+	else {
+		CharPt save = linePt ;
+		WChar c = StrGetChar(&linePt, SystemEncoding()) ;
+		linePt = save ;
+		return c == '\0' ? '\n' : c ;
+	}
+
+}
+
+#else
+
+static WChar cc ;
+
+void InterLineChangedUserStreams()
+{
+	/* Nothing */
+}
+
+static void InterLineReinitialize(void)
+{
+	cc = '\n' ;
+}
+
+void InterLineFinish(void)
+{
+	/* Do nothing */
+}
+
+static void InterLineInitialize(void)
+{
+	InterLineReinitialize() ;
+}
+
+WChar InterLineGet()
+{ /* this works even with raw input or sockets */
+	if( cc == '\n' && InteractiveSession() )
+		StreamPutStr(userOut, InterLineGetPrompt()) ;		
+	for(;;) {
+		OSAllowInterruptibleSysCalls() ;
+		cc = FileGetChar(StreamChannel(userIn)) ;
+		OSDisallowInterruptibleSysCalls() ;
+		if( cc < ' ' )
+			switch( cc ) {
+				case EOF:
+					if( InterruptHandle() ) continue ;
+					return EOF ;
+				case  0:
+					continue ;
+				case 10:
+				case 13:
+					return '\n' ;
+				case  4: /* CNTL-D */
+				case 26: /* CNTL-Z */
+					do {	/* skip rest of line */
+						cc = FileGetChar(StreamChannel(userIn)) ;
+					} while( cc != '\n' ) ;
+					return EOF ;
+			}
+		return cc ;
+	}
+}
+
+WChar InterLinePeek()
+{ /* this works even with raw input or sockets */
+	WChar c = FilePeekChar(StreamChannel(userIn)) ;
+	if( c < ' ' )
+		switch( c ) {
+			case 10:
+			case 13:
+				return '\n' ;
+			case EOF:
+			case  4: /* CNTL-D */
+			case 26: /* CNTL-Z */
+				return EOF ;
+		}
+	return c ;
+}
+
+#endif
+
+Bool InterLineGetSingleChar(WChar *c)
+{
+	if( !InteractiveSession() )
+		return false ;
+	InterLineReinitialize() ;  /* Disable prompt in InterLineGet */
+	if( !SetRawInput(StreamFILE(userIn)) )
+		return false ;
+	*c = InterLineGet() ;
+	UnsetRawInput() ;
+	return true ;
+}
+
+WChar InterLineGetCommand(Str prompt, int *arg)
+{
+	WChar c, res ;
+	int n ;
+	Bool hasArg ;
+	InterruptOff() ;
+	StreamFlush(userOut) ;
+	StreamFlush(userErr) ;
+	InterLineReinitialize() ;
+	InterLineBeginLinePrompt(prompt) ;	
+/* Get command */
+	while( (c = InterLineGet()) <= ' ' && c != '\n' && c != EOF ) ;
+	InterLineEndLinePrompt() ;	
+	res = InRange(c,'A','Z') ? (c - 'A' + 'a') : c ;
+/* Skip blanks */
+	if( c != '\n' && c != EOF )
+		while( (c = InterLineGet()) <= ' ' && c != '\n' && c != EOF ) ;
+/* Read argument */
+	hasArg = false ;
+	n = 0 ;
+	while( c != '\n' && c != EOF ) {
+		if( InRange(c, '0', '9') ) {
+			hasArg = true ;
+			n = n * 10 + c - '0' ;
+		}
+		else {
+			hasArg = false ;
+			break ;
+		}
+		c = InterLineGet() ;
+	}
+	if( arg != nil )
+		*arg = hasArg ? n : -1 ;
+	while( c != '\n' && c != EOF )
+		c = InterLineGet() ;
+	InterruptOn() ;
+	return res ;
+}
+
+void InterLineRestart()
+{
+	InterLinePromptInit() ;
+	InterLineReinitialize() ;
+}
+
+
+/* CXPROLOG C'BUILTINS */
+
+static void PPrompt(void)
+{
+	AtomPt a1 ;
+	Ensure( UnifyWithAtomic(X0, MakeAtom(InterLineGetLinePrompt())) ) ;
+	a1 = XTestAtom(X1) ;
+	ExtraPermanent(a1) ;	/* Ensures the prompt is not gc */
+	linePrompt = AtomName(a1) ;
+	JumpNext() ;
+}
+
+
+
+/* INIT */
+
+void InterLineInit2()
+{
+	InstallCBuiltinPred("prompt", 2, PPrompt) ;
+}
+
+void InterLineInit()
+{
+	InterLinePromptInit() ;
+	InterLineInitialize() ;
+	interactiveSession = !supressPrompts && OSIsATty(stdin) && OSIsATty(stdout) ;
+}

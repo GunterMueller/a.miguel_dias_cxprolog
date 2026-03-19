@@ -1,0 +1,107 @@
+	InstallCSysPred("getc", 2, PGetChain2) ;
+	InstallCSysPred("gets", 2, PGetS2) ;
+
+static void PGetChain2()
+{
+	char buff[1000] ;
+
+	TypeCheck("?a") ;
+	GetStringx(buff, XAtomName(R1)) ;
+	if( UnifyWithAtomic(X0, MakeExtra(buff, chainSubTag)) ) JumpNext()
+	DoFail()
+}
+
+static void PGetS2()
+{
+	char buff[1000] ;
+
+	TypeCheck("?a") ;
+	GetStringx(buff, XAtomName(R1)) ;
+	if( UnifyWithAtomic(X0, BufferToString(buff)) ) JumpNext()
+	DoFail()
+}
+
+void GetStringx(char *buff, char *sw) ;
+void GetStringx(char *buff, char *sw)
+{
+	register char *pt ;
+	register int c ;
+	
+	if( sw[0] == '\0' ) ;
+	elif( sw[0] == '~' && sw[1] == '\0' ) {
+			for(;;) {
+				c = GetStream(inputStream) ;
+				if( c == '\n' || c == CtrlZ ) break ;
+				*buff++ = c ;
+			}
+			UngetStream(inputStream, c) ;
+			*buff = '\0' ;
+	}
+	elif( sw[0] == '~' ) NotGetString(buff, sw + 1) ;
+	else YesGetString(buff, sw) ;
+}
+
+static void NotGetString(char *buff, char *stop)
+{
+	register char *pt ;
+	register int c ;
+	
+	for(;;)
+	{
+		c = GetStream(inputStream) ;
+		if( c == stop[0] || c == '\n' || c == CtrlZ ) goto end ;
+		for( pt = stop+1 ; *pt != '\0' ; pt++ )
+			if( c == *pt ) goto end ;
+		*buff++ = c ;
+	}
+end:
+	UngetStream(inputStream, c) ;
+	*buff = '\0' ;
+}
+
+static void YesGetString(char *buff, char *want)
+{
+	register char *pt ;
+	register int c ;
+	
+	for(;;)
+	{
+		c = GetStream(inputStream) ;
+		if( c == '\n' || c == CtrlZ ) goto end ;
+		for( pt = want ; *pt != '\0' ; pt++ )
+			if( c == *pt ) goto found ;
+		goto end ;
+	found:
+		*buff++ = c ;
+	}
+end:
+	UngetStream(inputStream, c) ;
+	*buff = '\0' ;
+}
+
+
+void Restart(char *fmt, ...) ;
+void Restart(char *fmt, ...)
+{
+	char s[1 Kb] ;
+	va_list p ;
+	
+	if( fmt != nil )
+	{
+		va_start(p, fmt) ;
+		vsprintf(s, fmt, p) ;
+		printf("%s\n", s) ;
+	}
+	PrologEvent(1) ;
+}
+
+gets(-S, +CharSet)	% reads a continuous sequence of chars inside CharSet.
+					% reading stops when first char outside CharSet is reached.
+					% A '~' at the first position of CharSet complements the set
+					% Exs: CharSet='abcd'; CharSet=' '; CharSet='~ '; CharSet='~ ;,'.
+
+concats([],[]).
+concats([H|T], R) :- concats(T,T2), as_string(H,HS), app(HS, T2, R).
+as_string(A,R) :- atom(A), !, name(A,R).
+as_string(I,R) :- integer(I), !, R = [I].
+as_string(X,X).

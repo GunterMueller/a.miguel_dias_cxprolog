@@ -1,0 +1,11 @@
+
+
+z(A) :- z(0,A).
+
+
+
+copy_term((z(A) :- z(0,A)),X), copy_term(X,Y).
+
+
+a(Z):- X = f(A), Y = g(X,X), copy_term(Y,Z).
+

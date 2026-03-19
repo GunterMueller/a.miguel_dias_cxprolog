@@ -1,0 +1,39 @@
+#!/bin/sh
+
+usage()
+{
+	echo "Usage: java-config [--libs] [--cflags] [--cxxflags] [--link]"
+	exit 1
+}
+
+error()
+{
+	echo "java-config: The Java development kit is not installed."
+	exit 1
+}
+
+file=`type -pf javac`
+if [ -z $file ]; then
+	error 1>&2
+fi
+
+while [ -h $file ]; do
+	file=`find $file -printf "%l"`
+done
+
+base=${file/\/bin\/javac/}
+
+case $1 in
+	--cflags)
+		echo "-I$base/include -I$base/include/linux"
+	;;
+	--cxxflags)
+		echo "-I$base/include -I$base/include/linux"
+	;;
+	--libs)
+		echo "-L$base/jre/lib/i386/client/ -ljvm -Wl,-rpath -Wl,$base/jre/lib/i386/client/ -Wl,-rpath -Wl,$base/jre/lib/i386/"
+	;;
+	*)
+		usage 1 1>&2
+	;;
+esac

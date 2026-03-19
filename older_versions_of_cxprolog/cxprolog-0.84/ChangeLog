@@ -1,0 +1,676 @@
+28/Feb/2003: version 0.84
+  -semantic changes:
+       * Added special support for cuts (!/0) occurring in the
+         context of the historic context predicates >/1 and </1.
+       * File README was renamed MANUAL.
+ -additions:
+       * New predicate 'flushall/0' flushes all the currently open
+         output streams.
+       * Imperative arrays introduced. The array predicates are:
+            array/1, array_new/1, array_clear/1, array_delete/1, array_set/3, 
+            array_get/3, array_delete_item/2, array_as_list/2, array_write/1,
+            array_write/2, current_array/1, arrays/0.
+  -improvements:
+       * Handling of "unsafe variables" simplified  in the compiler.
+       * Changed the method of internally accessing units, operators
+         and ivars. Previously they were accessed via hash tables.
+         Now, they are accessed using a direct link placed at each atom.
+         Direct access is much faster and much simpler to implement that the
+         previous method (therefore less error prone). On the down side,
+         each atom has grown 3 words.
+       * The implementation of contexts was revised and simplified. Now
+         each context operation is implemented as a regular builtin predicate!
+       * Optimization of the context operations. The speedup is around 20%.
+  -bug fixes:
+       * Now the predicate 'os_run/1' flushes all the output streams
+         before running the command.
+       * Bug in predicate name/2, concerning the automatic growing stacks
+         feature. This bug went unnoticed since version 0.79. Fixed.
+
+26/Jul/2002: version 0.83
+  -semantic changes:
+       * Minor change: arg/3 now simply fails if the first argument
+         is out of range. This is the standard behaviour.
+       * Using the default boot, all the goals issued at the top level
+         are now compiled. They were interpreted before. Therefore, now
+         the effects of a top-level goal match accurately the effects
+         of the same goal when used as part of a compiled program.
+         (As the sole practical effect of this, a top level goal may now
+         contain cuts, e.g. "a, !, b, !." Note that CxProlog only
+         supports "compiled cuts".)
+  -additions:
+       * Introduced control meta predicates \+/1, try/1, once/1,
+         possible/1, gen/1. There is special support for the cut (!/0)
+         occurring inside these predicates.
+       * Introduced predicates bagof/3, setof/3 (definition can be checked
+         in 'pl/CxDefs.pl').
+       * New predicate subterm/2, checks if a term is part of another.
+       * New predicates repeat/1 and repeat/2, succeed on backtracking
+         a given number of times.
+       * Two new predicates set_user_streams/3, restore_user_streams/0
+         allow the three user streams (user_input, user_output, user_error)
+         to be replaced. This allows, for example, the usual top-level
+         interaction to be performed through an Internet connection.
+         This  also allows the error messages to be redirected to a
+         log file.
+       * Four new predicates enables CxProlog to communicate though sockets:
+         net_install/1, net_uninstall/0, net_accept/2, net_connect/4. (See
+         example in pl/net.pl)
+  -improvements:
+       * Simpler reimplementation of predicate reconsult/1.
+       * Now, CxProlog deals better with unit parameters. Now it is possible
+         to import from a unit parameter, or to use a unit parameter in a
+         context extension goal such as UP>>get(X).
+  -bug fixes:
+       * Bug in the automatic expansion of the trail. This bug was
+         introduced along with the "finalizers" in version 0.82. Fixed.
+       * findall/3 was not reentrant. Fixed.
+       * arg/0 was accepting 0 as first argument. Fixed.
+
+23/Apr/2002: version 0.82
+  -semantic changes:
+       * None
+  -additions:
+       * New predicate unique/1, generates unique atoms.
+       * New predicates ins/4, ins_start/3, ins_end/3, insert extra
+         argument in term.
+       * New predicate free_vars/2 gathers all free variables in a term.
+       * New flags 'test_rellocation' and 'test_garbage_collection'
+         allow the activation of a self-testing mode that forces the
+         continuous execution of those critical algorithms that seldom
+         run: relocation of the control stacks and the garbage
+         collection of atoms.
+  -improvements:
+       * Now, it is possible to associate a "finalizer function" to any
+         non-deterministic predicate written in C. The finalizer is
+         automatically activated at the end, when the predicate naturally
+         runs out of alternatives OR when the remaining alternatives
+         of the predicate are discarded due to the use of the cut (!/0).
+         (To setup a finalizer function, you call the C function
+          "SetupFinalizer" in the initializing code of your
+          non-deterministic predicate written in C).
+  -bug fixes:
+        * dict_as_list/2 was working on Macintosh/MacOS but not
+          on PC/Linux. A machine independent fix was devised.
+        * Erroneous /=/2 could instantiate variables as a side-effect.
+          Fixed. 
+       * The relocation algorithm for the self-expanding control stacks
+         was buggy. Fixed, we hope.
+       * Now, all error and warning messages are sent to the standard
+         output error stream 'user_error'.
+
+07/Feb/2002: version 0.81
+  -semantic changes:
+        * Now, the possible values for the 'fail_on_error' flag are 0..2:
+            0 means OFF;
+            1 means ON but the error messages are displayed anyway;
+            2 means ON and the error messages are suppressed.
+  -additions:
+       * New set of predicates allows Unix communicating processes
+         to be used:
+            process/1, process_new/3, process_send_father/1,
+            process_send_father_max/1, process_receive_from_child/2,
+            process_receive_from_child_ready/0, current_process/1,
+            processes/0, processes_clean_dead/0.
+  -improvements:
+        * The code of all "extra primitive types" (dicts, stacks, queues,
+          streams and threads) was revised to enhance commonalty.
+          All common aspects of this implementation of those types has been
+          centralised in the new file "Extra.c". This increases reliability
+          and will make it easier to create more "extra primitive types".
+        * Now, the imperative dictionaries (dicts) are kept sorted and
+          they items are retrieved through binary search.
+        * A direct link to the last clause of each predicate was added
+          in the predicate descriptors. This way, a quadratic factor that
+          was hampering somewhat the efficiency of assertz/1 was removed.
+          However, we discovered that this only benefits really large
+          predicates, with more than 1000 clauses. The following table
+          shows the time taken to assertz the clauses a(1) ... a(N)
+          on a MacClassic:
+                  N   PREVIOUSLY  NEW VERSION
+                100     0.30 sec     0.28 sec
+               1000     3.63 sec     2.82 sec
+               2000     8.93 sec     5.60 sec
+               3000    15.90 sec     8.45 sec
+               5000    34.80 sec    14.05 sec
+              10000   110.80 sec    28.30 sec
+  -bug fixes:
+        * The term reader was not handling properly the atoms '[]'
+          and '{}'. For example, legit terms such as [](1) or {}(1) was
+          incorrectly taken as syntax errors. Problem fixed.
+        * The predicate 'abolish_builtin/2' has broken in version 0.80.
+          Fixed.
+         
+21/Dec/2001: version 0.80
+  -semantic changes: 
+       * The new debugger forced some minor changes in the boot file:
+          - $cxprolog_startup/0 was renamed $cxprolog_initialise/0
+            (no real change here)
+          - $cxprolog_restart/0 was discontinued and replaced by the
+            new predicate $cxprolog_top_level_goal/0. The difference is
+            that the new predicate performs the top-level user-iteration
+            concerning a SINGLE GOAL and not concerning a sequence of goals.
+            (Therefore, the new predicate is reactivated more often.)
+         Both predicates may fail or succeed after doing their job: it doesn't
+         matter. [Sample boot file in pl/CxBoot.pl].
+       * Now, the predicate concat/2 (===/2) can be applied to a
+         list of general prolog terms.
+       * When the 'fail_on_error' flag in ON, the runtime errors
+         generate "failure" instead of "restart", as before. But now
+         the error messages are simply discarded. They are not anymore
+         stored in the queue "errors", which is discontinued.
+       * Discontinued all the "unix_" prefixed predicates and replaced
+         them with a revised set of "os_" prefixed predicates.
+       * Discontinued the flags "debugging" and "trace" and replaced them
+         with the better flags "debug" and "interrupt".
+       * Discontinued the predicate top_call/1. In its place, you use the
+         standard predicate call/1.
+  -additions:
+        * The file "YourExtensions.c" now includes several cautionary
+          warnings at the beginning.
+        * New reasonably featured debugger, based on the traditional
+          "procedure box" control flow model. The README file includes
+          a section explaining the CxProlog debugger and its predicates.
+          These are the supported debugger predicates:
+            debug/0, trace/0, nodebug/o, notrace/0, debugging/0,
+            leash/1, spy/1, nospy/1, nospyall/2.
+          These are the available debug options:
+            <ret> creep            l leap             h help
+             s<i> skip             + spy this         i info
+             q<i> quasi-skip       - nospy this    g<n> ancestors
+             r<i> retry            n nodebug          = debugging
+             f<i> fail             a abort            : statistics
+                                   e exit
+       * New set of file system predicates allow the hierarchic
+         file system to be examined and manipulated. As now, some of
+         these predicates are only available under Unix and
+         Classic MacOS. The hierarchic file system predicates are:
+            fs_exists/1, fs_rename/2, fs_delete/1, file_exists/1,
+            rename_file/2, delete_file/1, exists/1, rename/2,
+            fs_property/3, fs_cd/1, fs_cd/2, fs_home/0, fs_files/1.
+       * New set of predicates provides access to selected operating
+         system services:
+            os_name/1, os_run/1, system/1, sh/0, os_env/2,
+            os_arg/2, os_args/1.
+      * New database predicate, mutable_builtin/2, allows user-defined
+         builtin predicates to be declared as mutable in the boot file.
+         By default, builtins are immutable.
+      * New flag "debug" controls the current debugger working mode.
+      * New flag "interrupt" controls the effects of the CTRL-C interrupt.
+  -improvements: 
+      * Developed an iterative algorithm for predicate is/2, so that
+        is/2 could deal properly with very large terms, such as
+        1+1+...+1  [100000 times, for example]. The previous algorithm
+        was recursive and couldn't deal with large terms because of the
+        C language runtime stack is limited in size. 
+  -bug fixes:
+      * The predicate univ, =../2, was not reliable enough. Now, all the
+        required checks are made. For example, previously, the nonsensical
+        call X =.. Y makes =../2 entering an infinite loop; now, the same
+        makes generates an error.
+      * CxProlog was crashing, completely out of control, if the boot file
+        does not follows the rules. Now, diagnosis messages are issued
+        in this situation.
+         
+30/May/2001: version 0.79
+  -semantic changes: 
+       * Reversed the order of parameters in ===/2 to make it resemble
+         an assignment operator.
+       * Discontinued the confusing convention, introduced in
+         version 0.56, concerning the automatic translation of '|' to ';'.
+         Now, there is a new flag, 'bar_is_semicolon', which cleanly
+         controls whether the automatic translation of '|' to ';'
+         is ON or OFF.
+  -additions:
+       * New predicates read_tokens/1 and read_tokens/2 read entire
+         line as list of tokens.
+       * New predicate top_call/1 specialises in activating goals in
+         the top level iteration.
+       * New flag 'compatible_strings' controls the interpretation of
+         double-quoted literals (strings).
+       * New flag 'bar_is_semicolon' controls whether '|' is, or is not,
+         automatically translated to ';'.
+       * New flag 'garbage_collection' controls whether the garbage
+         collector of atoms is active or not.
+  -improvements: 
+       * A new rationale for the management of the global stack is
+         introduced. Finally, the global stack becomes a fully fledged
+         growing structure. Previously, the global stack couldn't
+         grow in the context of any term-creating predicate.
+         All the following predicated had to rewritten in order to
+         comply to the new rationale: read/1, read/2, copy_term/2,
+         copy_term/3, sort/2, msort/2, keysort/2, name/2,
+         dict_get/3, dict_as_list/1,  =:/2, current_ivar/1,
+         clause/2, retract/1, queue_get/2, queue_peek/2,
+         queue_as_list/2, stack_pop/2, stack_top/2, stack_as_list/2.
+       * We did away with the existing intern limit of 64
+         distinct variables per term (except on asserted clauses).
+       * As now, many CxProlog internal routines are implemented as
+         recursive functions. This is a bit dangerous because the C
+         language may fail to provide a large enough runtime stack,
+         when dealing with very large terms. Therefore we started
+         developing iterative versions of the more critical
+         algorithms used inside CxProlog. These are the iterative
+         algorithms already developed: "CopyTerm", "Unify", "Compare".
+  -bug fixes:
+       * atom_term/2 and atom_termq/2 were not dealing properly with
+         atoms '', ' ', '  ', '   ', etc.
+       * The cut predicate (!/0) was not working in the context 
+         of predicates ;/2, not/1, call/1, etc. [This bug was introduced
+         in version 0.76 and remained unnoticed until now.]
+       * The generation of indexes for predicates with many
+         clauses was making CxProlog crash. This was a problem in
+         the management of the auto-expanding buffer. [As a matter of
+         fact, we had disregarded testing for extreme conditions during
+         the creation of indexes. Bug introduced in version 0.76.]
+
+27/Mar/2001: version 0.78
+  -semantic changes: 
+       * The interpretation of the sublists in predicate concat/2 (===/2)
+         has changed.
+       * The 'show_text' and 'smart_atoms' flags are discontinued.
+       * The 'super_indexes' flag is replaced by the more flexible
+         flag 'index_params'.
+  -additions:
+       * New flag 'float_display_precision' controls how floats are
+         displayed.
+       * New predicate atoms/0 presents information concerning the
+         internal hash table of atoms.
+       * New predicate floats/0 presents information concerning the
+         new internal hash table of very large precision floats.
+       * New float constant 'inf' represents "infinite" (inf = 1/0).
+       * New integer constants 'int_size' and 'float_size' tell the
+         bit-length of the integers and floats in your installation of
+         CxProlog.
+  -improvements: 
+       * A garbage collector of atoms is introduced. "Texts", the
+         previous special representation of transient text are
+         discarded. Replacing "texts" by garbage collected atoms
+         makes CxProlog easier to maintain and more reliable.
+  -bug fixes:
+       * By mistake, some trans-127 characters could not be recognised
+         as belonging to any valid lexical character category. This was
+         an issue with predicates atom_term/2, atom_termq/2, writeq/1
+         and  writeq/2. Fixed the problem.
+       * Due to "integer overflow", reading a very long integer used
+         to generating a meaningless value. Now, such long integers
+         are automatically converted to float numbers. Example:
+             ?- X is 11111111111111111111111111111111111111111111111.
+             X=1.11111111111111111e+46
+             yes
+       * Due to "integer overflow", when applied to large integer
+         numbers, the operators +/2, -/2, -/1, */2 could generate
+         meaningless results. Now the operands of these operators are
+         always converted to float numbers, meaning the problem has been
+         fixed. Conclusion: predicates is/1, =:=/2, =\=/2, </2, >/2, =</2,
+         >=/2 can now be used with peace of mind as each and every form
+         of integer overflow has been ruled out from CxProlog.
+       * We backtracked on the decision of introducing higher precision
+         integers. Instead, we introduce large precision floats. Now, we
+         use the largest precision floats supported by the host machine.
+         This amounts to 80-bit precision floats in most machines (check
+         the value of the new constant 'float_size' in your installation).
+         As for integers, currently CxProlog supports 29-bit integers on
+         32-bit machines and 61-bit integers on 64-bit machines (check
+         the value of the new constant 'int_size' in your installation).
+
+03/Mar/2001: version 0.77
+  -semantic changes: 
+       * The environment variable 'CXPROLOG_SIZE' has been discontinued.
+       * The command line argument '-size' has been discontinued.
+  -additions:
+       * None.
+  -improvements: 
+       * Tighter detection of local stack and global stack overflows.
+       * The trail becomes an growing (or "elastic") structure.
+       * The local stack becomes an growing structure.
+         (Growing the local stack involves a complex relocation
+         algorithm, but it has been very thoroughly tested.)
+       * The global stack becomes a growing structure, but, in this case,
+         only PARTIALLY: as yet, certain operations (such as
+         reading an extremely large term via read/1) may still generate
+         the "Global stack overflow" error. Improving from here requires
+         reconsidering  and rewriting large portions of code. This will
+         be done  at a  later time.
+         [Due to the "elastic" trail and stacks, the INITIAL memory
+         requirements of CxProlog dramatically reduced from 1.000Kb
+         to 200Kb!]
+       * Introduce higher precision integers in the context of
+         32-bit machines. Previously, CxProlog only supported 29-bit
+         integers (8-digit precision) on 32-bit machines.
+         This gain of precision depends on the subjacent C compiler:
+         using most compilers, it amounts to merely a single digit;
+         using GCC, it amounts to 10 digits. Check out the values
+         of 'max_int' and 'min_int' in your version of CxProlog.
+         [Implementation detail: Integers not fitting in the
+         original 29-bit limit are stored in a table of large integers.]
+  -bug fixes:
+       * Dubious implementation of the GetXValue instruction revised.
+         Theoretically, due to side-effects, some C compilers might
+         generate the "wrong code" for this instruction.
+
+24/Jan/2001: version 0.76
+  -semantic changes: 
+       * Predicates readv/2 and readv/3 are replaced by the more
+         flexible new predicate varnames/1.
+       * Predicate debugging_call/1 is deleted and replaced by the
+         more convenient flag 'debugging'.
+  -additions:
+       * Introduced support to '?-T' questions in the consult/reconsult
+         predicates.
+       * Revised the support to ':-T' commands in the consult/reconsult
+         predicates.
+       * Introduced support to ':-T' commands in the top level iteration.
+       * New predicate question/2 handles '?-T' questions at the top level
+         iteration and consult/reconsult predicates.
+       * New predicate varnames/1 gathers the names of all the variables
+         in the term last read using read/1 or read/2.
+       * New flag 'debugging' allows debugging to be enabled/disabled. The
+         effects of the CNTL-C interrupt, now depend on the status of this
+         flag.
+  -improvements: 
+       * None.
+  -bug fixes:
+       * Problems with the handling of the CNTL-C interrupt fixed.
+
+15/Jan/2001: version 0.75
+  -semantic changes: 
+       * Old predicate read/2 is renamed readv/2. Now read/2
+         denotes a new stream predicate.
+       * The method for changing and testing the internal flags of
+         CxProlog has changed. The new method is based on the new
+         predicates flag/2, flag/3.
+       * The 'silent' flag is discontinued.
+       * The predicate undef/0 is renamed check_missing/0.
+  -additions:
+       * Now, the user is allowed to specify a boot file of his own. More
+         on this on the "ALTERNATIVE BOOT FILE" section near the end of
+         this document.
+       * "Flexible streams" introduced. There is a new set of "stream
+         predicates" which require an explicit stream argument:
+            open/3, close/1, stream/1, set_input/1, current_input/1,
+            read/2, readv/3, get0/2, get/2, peek0/2, peek/2, skip/2,
+            get_line/2, set_output/1, current_output/1, flush/1, write/2,
+            writeln/2, writeq/2, writeqln/2, print/2, put/2, nl/1, tab/2,
+            streams/0.
+       * Handy new set of predicates for spying selected aspects of the
+         CxProlog internal state:
+            show/0, builtins/0, flags/0, ops/0, stacks/0, streams/0,
+            version/0, dicts/0, ivars/0, queues/0, statistics/0, units/0
+       * A bunch of new ivar predicates:
+            ivar/1, ?:=/2, #:=/2, ivar_delete/1, current_ivar/2.
+       * Three new minor control predicates:
+            false/0, exit/0, debugging_call/1.
+       * Several new queue/stack/dict predicates:
+            queue_as_list/2, stack_as_list/2, dict_as_list/2,
+            queue_write/2, stack_write/2, dict_write/2.
+       * Six new term predicates:
+            numbervars/3, write_depth/2, copy_term/2, copy_term/3,
+            add_pl/2, app/3.
+       * Predicate atom_term/2, one that deals with reversible conversions,
+            is renamed atom_termq/2. A new non-reversible version of this
+            predicate is introduced and named atom_term/2 (that is, the old
+            predicate name was recycled).
+       * Two new minor thread predicates:
+            active_thread_completed/0, active_thread_failed/0.
+       * New predicates silent_consult/1 and silent_reconsult/1 are
+         similar to consult/1 and reconsult/1 but produce no output
+         on their own.
+       * New flag 'compatible_if_then' establishes the exact semantics of
+         predicate ->/2.
+       * New database predicate abolish_builtin/2 allows predefined
+         builtin predicates to be redefined in an alternative boot file.
+       * New predicate check_imports/0 produces warnings concerning
+         possible inconsistency in the import/visibility declarations
+         graph.        
+  -improvements: 
+       * This file, "_README", was completely rewritten.
+  -bug fixes:
+       * Fixed bug on replacing a "text" by another term in an imperative
+         var.
+       * Fixed bug on reading an erroneous terms appearing at the ending of a
+         file.
+
+03/Dec/2000: version 0.74
+  -semantic changes: 
+       * None.
+  -additions: 
+       * New predicate unix_arg/2 allows access to individual command
+         line arguments.
+       * New predicate unix_args/1 gets entire command line as a
+         list of atoms.
+       * Predicate slice/4 is generalised. Now, it allows negative
+         integer arguments, representing offsets relative to the ENDING of
+         the input atom.
+       * Two new ivar predicates: ivar/1, ivar_delete/1.
+       * Imperative stacks introduced. The stack predicates are:
+            stack/1, stack_new/1, stack_clear/1, stack_delete/1,
+            stack_push/2, stack_pop/2, stack_top/2, stack_write/1,
+            current_stack/1
+  -improvements: 
+       * None.
+  -bug fixes:
+       * None.
+
+11/Out/2000: version 0.73
+  -semantic changes: 
+       * Slight change of the behaviour induced by the "fail_on_error"
+         flag: now, when this flag is 'on', the error messages are
+         silently appended to a queue placed in the new predefined
+         ivar "errors". The previous ivar "last_error" is discontinued.
+  -additions: 
+       * A standard order over the terms is introduced. The related
+         predicates are: @<, @>, @=<, @>=, sort/2, msort/2, keysort/2
+       * Introduced super-indexes, based on the three first parameters of
+         each predicate, instead of only the first.
+       * Imperative queues introduced. The queue predicates are:
+            queue/1, queue_new/1, queue_clear/1, queue_delete/1,
+            queue_put/2, queue_get/2, queue_peek/2, queue_write/1,
+            current_queue/1
+       * Imperative dictionaries introduced. The dict predicates are:
+            dict/1, dict_new/1, dict_clear/1, dict_delete/1, dict_set/3,
+            dict_get/3, dict_delete_item/2, dict_write/1, current_dict/1
+       * Introduced lots of internal flags. As yet, the supported flags
+         are: trace, fail_on_error, smart_atoms, silent, keep_source,
+            undef_warnings, memory_warnings, show_text, super_indexes.
+  -improvements: 
+       * Ongoing work on "elastic internal structures": in other words,
+         the "growing" feature of the "code area space" is being
+         extended to all the other internal buffers. 
+       * This file, "_README", expanded. Tried to be exhaustive.
+  -bug fixes: 
+       * Fixed a nasty bug that showed up whenever a "text" was stored in
+         an imperative var.
+
+31/Aug/2000: version 0.72
+  -semantic changes: 
+       * "Smart atoms" are introduced. "Texts" are discarded. NOW, THE
+         PROGRAMMER ONLY DEALS WITH ATOMS as it is the implementation that
+         decides on the best internal representation for each atom
+         depending on its usage. The "back-quotes" notation is
+         discontinued. [Turning 'on' the 'show_text' flag makes write/1
+         display in a special way (using a prefixing "@") the atoms that
+         are internally represented as "texts".]
+       * Removed all "text" predicates and some "string" predicates. They
+         are not needed anymore since the introduction of the "smart
+         atoms". The removed predicates are:
+               text/1, gett/1, slicet/4, namet/2, concatt/2,
+               gets/1, puts/1, concats/2.
+       * Ivars are not explicitly declared anymore. They are automatically
+         created when assigned for the first time. Therefore, the
+         predicate create_ivar/1 is discontinued.
+  -additions: 
+       * Added replacement predicates for smart atoms (as the "text"
+         predicates have been deleted):
+            get_line/1, slice/4, concat/2, ===/2.
+       * New predicate atom_term/2 converts between a term and its textual
+         representation.
+       * Turning 'on' the 'fail_on_error' flag, changes the internal
+         behaviour of CxProlog so that a runtime error generates
+         "failure" instead of "restart". In this case, each error message
+         is silently stored in the ivar "last_error".
+       * New predicates unix_env/2 and unix_run/2.
+       * New predicate host_speed/1.    
+  -improvements: 
+       * Lots of small internal improvements. 
+  -bug fixes:
+       * None.
+ 
+27/Jul/2000: version 0.71
+  -semantic changes: 
+       * Predicates get_ivar/2 and set_ivar/2 are renamed using the
+         operators:
+            :=/2 and =:/2.
+       * Using a functor with too large an arity is certainly the result
+         of some logic mistake. Therefore a maximum arity for functors
+         is introduced: maxArity = 64.
+  -additions: 
+       * "Historic contexts" are introduced in the language.
+       * New predicate quote/1 quotes text.
+       * New predicate file_exists/1 checks if a file can be opened
+         for reading.
+       * Predicates see/1, tell/1, consult/1, reconsult/1, etc., now
+         accept either atoms OR texts.
+       * Introduced support for the command line switches "-boot"
+         and "-size".
+       * Introduced support for the shell variables CXPROLOG_BOOT and
+         CXPROLOG_SIZE.
+  -improvements: 
+       * Now the prompt is written on the C side of the system, and
+         not anymore on the Prolog side. This is required by the "readline
+         interface".
+       * File "YourExtentions.c" and functions "YourPrologue" and
+         "YourExtensions" introduced.  The implementation was
+         reorganised so that all C extensions to CxProlog would
+         bottleneck through functions "YourPrologue" and "YourExtensions",
+         defined in file "YourExtentions.c".
+       * Much simpler method for introducing non-deterministic builtin
+         predicates, so that extending the system will be easier.
+       * Now the code area space of CxProlog grows automatically, as
+         needed.
+  -bug fixes: 
+       * Two bugs in write/1 fixed.
+       * Bug in functions "ceil" and "floor" fixed.
+       * Bug in the internal codification of floats fixed.
+
+10/Apr/2000: version 0.70
+  -semantic changes: 
+       * None.
+  -additions: 
+       * Added support for units (modules). Units may be parameterised.
+       * Added support for the contextual logic programming paradigm.
+       * Added support for imperative variables. The ivar predicates are:
+            create_ivar/1, get_ivar/2, set_ivar/2.
+       * The sublanguage of the arithmetic expressions was enlarged.
+       * Now, the Control-C interrupt is handled
+  -improvements: 
+       * Complete internal system overhaul.
+       * The error messages are now much improved.
+       * Improved the display of query results.
+       * New internal method for binding the predicates to their code.
+       * New improved technique for dealing with clause chains: two
+         parallel chains are not used anymore.
+       * New improved techniques for dealing with indexes: on the
+         invalidation of the index when a predicate changes, on the
+         relocation of the index code, etc.
+       * read/1 can now deal with V E R Y  L A R G E terms.
+       * The internal representation of floats in the host machine is now
+         automatically recognised.
+  -bug fixes: 
+       * Bug in predicate clause/2 fixed. Now this predicate fails
+         if applied to a builtin predicate.
+       * Bug related to the use of trans-127 characters fixed.
+  -special changes:
+       * "NanoProlog" was renamed "CxProlog" due to the introduction for
+          the contextual logic programming paradigm.
+        
+24/Mar/2000: version 0.57
+  -semantic changes: 
+       * Removed predicate gets/2.
+       * '`' changed from _SY to '`' (Now '`' is used as delimiter for
+         the "text" literals).
+  -additions: 
+       * Added general support for the future introduction of new
+         primitive types:
+           - new tag: "extra"
+           - new instructions: the "Extra" instruction family
+           - new predicate: extra/1
+       * Added new primitive type "text" and associated predicates:
+            text/1, gett/1, slicet/4, namet/2, concatt/2.
+  -improvements: 
+       * The whole program was made ANSI-conformant.
+  -bug fixes: 
+       * None.
+
+27/Jun/1999: version 0.56
+  -semantic changes: 
+       * ';', '#' and other trans-127 chars changes from _SO to _SY.
+       * In contexts where '|' did not indicate "the reminder of a list"
+         this char used to be translated to ";". Now, the user can
+         change this default by forcing '|' to be interpreted as a
+         regular binary operator. This is done by defining '|' as a
+         regular operator. Use, for example, the command
+            :- op(1140, xfx, '|').
+       * Removed predicates noindex/1 and noindex/2. (NanoProlog got
+         clever and does not need anymore to bother the user with
+         indexing issues.)
+  -additions: 
+       * New I/O predicates: peek0/1, peek/1, puts/1, gets/1, gets/2
+       * New string predicate: concats/2
+  -improvements:
+       * Some small internal improvements
+  -bug fixes: 
+       * "nonvar/1" bug fixed.
+       * [user] (consult(user)) bug fixed.
+  
+05/Aug/1997: version 0.55
+  -semantic changes: 
+       * None.
+  -additions: 
+       * Introduce support for the Latin-1 character set.
+       * Now, the name of the boot file can be obtained from an optional
+         command line argument or from the unix environment variable
+         "NANO". Only as last resource an internally predefined name is
+         used. This name is "CxBoot.pl".
+       * Now, the predicates consult/1 and reconsult/1 append the
+         suffix '.pl' to the filename, if so necessary.
+  -improvements: 
+       * None.
+  -bug fixes: 
+       * None.
+  
+08/Apr/1997: version 0.54
+  -semantic changes: 
+       * Added proper support for the cut predicate (!/0) when used
+         inside the builtin predicates: ,/2, ;/2, not/1, call/1, ->/2
+         (new virtual machine instruction: PutCutLevel)
+  -additions: 
+       * New builtin predicate undef/0: it lists all the undefined
+         predicates invoked in the existing clauses.
+  -improvements: 
+       * None.
+  -bug fixes: 
+       * None.
+
+24/Set/1996: version 0.53
+  -bug fixes: 
+       * Harmless bug fixed
+
+25/Feb/1994: version 0.52
+  -improvements: 
+       * 64 bit machine compatibility plus some polishing.
+       * Tested on some more machines: Alpha, Sparc, 88000, R6000, HP
+  -bug fixes: 
+       * Bug in reconsult/1 fixed.
+ 
+20/Nov/1993: version 0.51
+  -improvements: 
+       * Threaded code added
+  -bug fixes: 
+       * Small bugs fixed
+
+17/Nov/1993: version 0.5
+
+...
+
+20/Mar/1990: version 0.1

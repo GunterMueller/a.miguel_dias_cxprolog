@@ -1,0 +1,250 @@
+> static Pt Term(int termPrec)
+735,740c707,714
+< 	register Pt res ;
+< 	AtomPt atom = nil ;  /* avoids warning */
+< 	int m = 0,
+< 		p = 0, i,	/* priority of current operator */ /* = 0 avoids warning */
+< 		lp,	li,		/* priority of the left argument */
+< 		rp, ri ;	/* priority of the right argument */
+---
+> 	Pt res ;
+> 	AtomPt atom ;
+> 	int leftPrec = 0 ;	/* current left precedence */
+> 	int p, i,			/* precedence of current operator */
+> 		lp,	li,			/* precedence of the left argument */
+> 		rp, ri ;		/* precedence of the right argument */
+> 	int q, lq, rq ;		/* auxiliary */
+> 		
+751,752c725,726
+< 		case commaTk:	ParserError("invalid ','") ;
+< 		case barTk:		ParserError("invalid '|'") ;
+---
+> 		case commaTk:	res = MakeAtom(",") ; goto continueL ; /* simple atom */
+> 		case barTk:		res = MakeAtom("|") ; goto continueL ; /* simple atom */
+770,782c744,745
+< 			elif( (p = Prefix(atom, &rp)) != 0 ) {
+< 				Pt temp_res = MinusOp(atom) ;
+< 				if( temp_res != nil ) {
+< 					res = temp_res ;
+< 					goto continueL ;
+< 				}
+< 				if( n < p ) {
+< 					if( IsCloseToken(tk) ) goto simpleAtom ; /* new */
+< 					else {
+< 						NextToken() ;
+< 						ParserError("Incompatible precedences (1)") ;
+< 					}
+< 				}
+---
+> /* Decide if the first token, an atom here, is a prefix operator or a simple atom */
+> 			elif( (p = Prefix(atom, &rp)) != 0 && p <= termPrec ) {
+784c747,763
+< 					case nxTk:		goto prefixL ;
+---
+> 					case nxTk: {
+> 						if( atom == XAtom(tMinusAtom) && IsNumber(tkTerm) ) {
+> 							res = IsInt(tkTerm)
+> 									? MakeInt(-XInt(tkTerm))
+> 									: MakeFloat(-XFloat(tkTerm)) ;
+> 							NextToken() ;
+> 							goto continueL ;							
+> 						}
+> 						else goto prefixL ;
+> 					}
+> 					case atomTk: {
+> 						if( (q = Prefix(XAtom(tkTerm), &rq)) != 0 && q <= rp )
+> 							goto prefixL ;
+> 						elif( (q = Infix(XAtom(tkTerm), &lq, &rq)) != 0 && q <= termPrec )
+> 							goto continueL ; /* simple atom */
+> 						else goto prefixL ;
+> 					}
+791,809c770,775
+< 					case atomTk: {
+< 						if( Infix(XAtom(tkTerm), &lp, &rp) ) {
+< 							PeekToken2() ;
+< 							if( IsCloseToken(tk) ) goto prefixL ;
+< 							else goto simpleAtom ;
+< 						}
+< 						elif( Postfix(XAtom(tkTerm), &lp) ) {
+< 							PeekToken2() ;
+< 							if( IsCloseToken(tk) ) goto prefixL ;
+< 							else goto simpleAtom ;
+< 						}
+< 						else goto prefixL ;
+< 					}
+< 					case commaTk:	goto simpleAtom ;
+< 					case closeRTk:	goto simpleAtom ;
+< 					case closeSTk:	goto simpleAtom ;
+< 					case closeCTk:	goto simpleAtom ;
+< 					case dotTk:		goto simpleAtom ;
+< 					case barTk: 	goto simpleAtom ;
+---
+> 					case commaTk:	goto continueL ; /* simple atom */
+> 					case closeRTk:	goto continueL ; /* simple atom */
+> 					case closeSTk:	goto continueL ; /* simple atom */
+> 					case closeCTk:	goto continueL ; /* simple atom */
+> 					case dotTk:		goto continueL ; /* simple atom */
+> 					case barTk: 	goto continueL ; /* simple atom */
+812c778
+< 				InternalError("Term (1)") ;
+---
+> 				return InternalError("Term (1)") ;
+814c780
+< 			else goto continueL ;
+---
+> 			else goto continueL ; /* simple atom */
+818,822c784
+< 	InternalError("Term (2)") ;
+< 
+< simpleAtom:
+< 	res = TagAtom(atom) ;
+< 	/* fall through */
+---
+> 	return InternalError("Term (2)") ;
+841c803
+< 			if( n >= commaPrec && m < commaPrec ) {
+---
+> 			if( leftPrec < commaPrec && commaPrec <= termPrec ) {
+843,846c805,807
+< 				m = commaPrec ;
+< 				res = MakeBinStruct(commaFunctor, res, Term(m)) ;
+< 				if( n > m ) goto continueL ;
+< 				else return res ;
+---
+> 				res = MakeBinStruct(commaFunctor, res, Term(commaPrec)) ;
+> 				leftPrec = commaPrec ;
+> 				goto continueL ;
+851c812
+< 			if( n >= barPrec && m < barPrec ) {
+---
+> 			if(  leftPrec < barPrec && barPrec <= termPrec ) {
+853d813
+< 				m = barPrec ;
+855,857c815,817
+< 														res, Term(m)) ;
+< 				if( n > m ) goto continueL ;
+< 				else return res ;
+---
+> 														res, Term(barPrec)) ;
+> 				leftPrec = barPrec ;
+> 				goto continueL ;
+863c823
+< 			if( (p = Postfix(atom, &lp)) != 0 && n >= p && m <= lp ) {
+---
+> 			if( (p = Postfix(atom, &lp)) != 0 && leftPrec <= lp && p <= termPrec ) {
+865,866c825,826
+< 				if( (i = Infix(atom, &li, &ri)) != 0 && n >= i && m <= li ) {
+< 					/* postfix and infix - look one token ahead to decide ... */
+---
+> 				if( (i = Infix(atom, &li, &ri)) != 0 && leftPrec <= li && i <= termPrec ) {
+> 					/* second token postfix and infix - look ahead to decide ... */
+884,885c844
+<  							int x, rx ;
+< 							AtomPt atx = XAtom(tkTerm) ;
+---
+>  							AtomPt atx = XAtom(tkTerm) ;
+887,891c846
+< 								goto infixL ;
+< 							else {
+< 								PeekToken2() ;
+< 								if( IsCloseToken(tk) ) goto infixL ;
+< 							}							
+---
+> 								goto infixL ;	/* same as varTk */							
+894c849
+< 							if( (x = Prefix(atx, &rx)) != 0 && ri >= x )
+---
+> 							if( (q = Prefix(atx, &rq)) != 0 && q <= ri )
+899c854
+< 							if( (x=Postfix(atx, &lx)) != 0 && lp <= x )
+---
+> 							if( (q = Postfix(atx, &lq)) != 0 && p <= lq && q <= termPrec )
+902c857
+< 							elif( (x=Infix(atx, &lx, &rx)) != 0 && p <= lx )
+---
+> 							elif( ( q = Infix(atx, &lq, &rq)) != 0 && p <= lq && q <= termPrec )
+911c866
+< 					InternalError("Term (3)") ;
+---
+> 					return InternalError("Term (3)") ;
+915c870
+< 			elif( (i = Infix(atom, &li, &ri)) != 0 && n >= i && m <= li ) {
+---
+> 			elif( (i = Infix(atom, &li, &ri)) != 0 && leftPrec <= li && i <= termPrec ) {
+923c878
+< 	InternalError("Term (4)") ;
+---
+> 	return InternalError("Term (4)") ;
+927c882
+< 	m = p ;
+---
+> 	leftPrec = p ;
+932c887
+< 	m = p ;
+---
+> 	leftPrec = i ;
+936c891
+< 	m = p ;
+---
+> 	leftPrec = p ;
+973c928
+< 			return eofPt ;
+---
+> 			return tEofAtom ;
+976,977c931
+< 	InternalError("ZDoReadTokens") ;
+< 	return nil ;
+---
+> 	return InternalError("ZDoReadTokens") ;
+1016c970
+< 			return eofPt ;
+---
+> 			return readingFromString ? tEmptyAtom : tEofAtom ;
+1019,1020c973
+< 	InternalError("ZDoReadTerm") ;
+< 	return nil ;
+---
+> 	return InternalError("ZDoReadTerm") ;
+1043d995
+< 	if( !StreamAtEnd(input) ) t = nil ;
+1054,1055c1006
+< 	if( t == eofPt ) t = tEofAtom ;
+< 	MustBe( t != nil && Unify(X0, t) )
+---
+> 	MustBe( t != nil && Unify(X0, t) ) ;
+1062,1063c1013
+< 	if( t == eofPt ) t = tEofAtom ;
+< 	MustBe( t != nil && Unify(X1, t) )
+---
+> 	MustBe( t != nil && Unify(X1, t) ) ;
+1071,1072c1021
+< 	if( t == eofPt ) t = tEofAtom ;
+< 	Ensure( t != nil && Unify(X1, t) )
+---
+> 	Ensure( t != nil && Unify(X1, t) ) ;
+1075,1076c1024,1025
+< 	for( s = BigStrBegin() ; CharType(*s) == _BL ; s++ ) ;
+< 	MustBe( UnifyWithAtomic(X2, MakeTempAtom(s)) )
+---
+> 	for( s = BigStrBegin() ; CharType(*cUCharPt(s)) == _BL ; s++ ) ;
+> 	MustBe( UnifyWithAtomic(X2, MakeTempAtom(s)) ) ;
+1081,1082c1030,1031
+< 	ZEnsureFreeSpaceOnStacks(5 * NVars(), "varnames/1") ; /* stacks may grow */
+< 	MustBe( Unify(X0, MakeVarList()) )
+---
+> 	ZEnsureFreeSpaceOnStacks(5 * NVars(), nil) ; /* stacks may grow */
+> 	MustBe( Unify(X0, MakeVarList()) ) ;
+1088,1089c1037
+< 	if( t == eofPt ) t = tEofAtom ;
+< 	MustBe( t != nil && Unify(X0, t) )
+---
+> 	MustBe( t != nil && Unify(X0, t) ) ;
+1096,1097c1044
+< 	if( t == eofPt ) t = tEofAtom ;
+< 	MustBe( t != nil && Unify(X1, t) )
+---
+> 	MustBe( t != nil && Unify(X1, t) ) ;
+1107c1054
+< 	InstallAtomGCHandler(TermReadAtomGCMark) ;
+---
+> 	InstallBasicGCHandler(TermReadBasicGCMark) ;
